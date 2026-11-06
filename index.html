@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Остаться в живых — по порядку</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05090b; --bg2:#0a1214; --panel:#0d171a; --panel2:#111e22; --line:#1d2e33;
+  --ink:#e9e4d8; --dim:#93a3a3; --faint:#5d6f70;
+  --sand:#d9c79e; --jungle:#4f8a5b; --ocean:#2c6f86; --amber:#ffb547; --red:#d9534f;
+  --violet:#a98be0; --ghost:#9cc7e0; --gold:#e8c66a;
+  --serif:'Cormorant Garamond', Georgia, serif; --sans:'Inter', system-ui, -apple-system, sans-serif; --mono:'VT323', ui-monospace, monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:
+  radial-gradient(1200px 600px at 15% -10%, rgba(44,111,134,.18), transparent 60%),
+  radial-gradient(900px 500px at 100% 0%, rgba(79,138,91,.12), transparent 60%),
+  var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--sand)}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 22px 40px}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:24px;margin-bottom:16px}
+.brand{display:flex;flex-direction:column;line-height:1}
+.brand .kicker{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--dim)}
+.brand h1{margin:4px 0 0;font-family:var(--serif);font-weight:600;font-size:34px;letter-spacing:.06em}
+.brand h1 em{font-style:italic;color:var(--sand);font-weight:500}
+.numbers{display:flex;gap:10px;margin-left:auto;font-family:var(--mono);font-size:26px;color:var(--faint);user-select:none}
+.numbers span{transition:color .4s,text-shadow .4s}
+.numbers span.lit{color:var(--amber);text-shadow:0 0 12px rgba(255,181,71,.6)}
+.swan{display:flex;align-items:center;gap:10px;padding:6px 12px;border:1px solid var(--line);border-radius:10px;background:#060b08;font-family:var(--mono)}
+.swan .clock{font-size:30px;color:#7dd87d;letter-spacing:.06em;min-width:86px;text-align:right;text-shadow:0 0 8px rgba(125,216,125,.4)}
+.swan.warn .clock{color:var(--amber);animation:pulse 1s infinite}
+.swan.fail .clock{color:var(--red)}
+.swan input{width:178px;background:#000;border:1px solid #1f3b25;color:#7dd87d;font-family:var(--mono);font-size:20px;padding:2px 8px;border-radius:6px;outline:none}
+.swan input:focus{border-color:#7dd87d}
+.swan .lbl{font-size:16px;color:#4d7a4d;line-height:1}
+@keyframes pulse{50%{opacity:.45}}
+
+/* ---------- layout ---------- */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px}
+
+/* ---------- stage / player ---------- */
+.stage{position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:16/9;border:1px solid var(--line)}
+.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.stage:fullscreen{border-radius:0;border:0}
+.stage .hud{position:absolute;left:16px;top:14px;pointer-events:none;opacity:0;transform:translateY(-6px);transition:.6s}
+.stage .hud.show{opacity:1;transform:none}
+.hud .hl{font-family:var(--serif);font-size:30px;font-weight:600;text-shadow:0 2px 14px #000}
+.hud .hs{font-size:13px;color:var(--sand);text-shadow:0 1px 8px #000;letter-spacing:.04em}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;mix-blend-mode:screen}
+.flash.go{animation:flash .9s ease-out}
+@keyframes flash{0%{opacity:0}12%{opacity:.75}100%{opacity:0}}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,rgba(10,20,22,.88),rgba(0,0,0,.96));z-index:3;text-align:center;padding:30px}
+.overlay[hidden]{display:none}
+.overlay .big{font-family:var(--serif);font-size:44px;font-weight:600;letter-spacing:.04em}
+.overlay .big em{color:var(--sand)}
+.overlay p{color:var(--dim);max-width:560px;margin:10px auto 22px;line-height:1.55}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:9px 14px;transition:.15s}
+.btn:hover{border-color:#36545b;background:#16272c}
+.btn.primary{background:var(--sand);color:#1a160c;border-color:var(--sand);font-weight:600}
+.btn.primary:hover{background:#ead9b0}
+.btn.small{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.4;cursor:default}
+.overlay .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.overlay input[type=text]{width:min(520px,90%);padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#071012;color:var(--ink);font:inherit;margin-bottom:12px}
+
+.controls{display:flex;align-items:center;gap:8px;margin:12px 2px 0;flex-wrap:wrap}
+.controls .sp{flex:1}
+.ctl{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;font-size:16px}
+.ctl:hover{background:#15262b}
+.ctl.play{width:52px;background:var(--sand);color:#1a160c;border-color:var(--sand);font-size:18px}
+.segbar{position:relative;height:6px;border-radius:6px;background:#132226;margin:12px 2px 0;overflow:hidden;cursor:pointer}
+.segbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--ocean),var(--sand));border-radius:6px}
+.meta{display:flex;justify-content:space-between;color:var(--dim);font-size:12px;margin:6px 2px 0;gap:12px}
+.syncdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--faint);margin-right:6px;vertical-align:middle}
+.syncdot.ok{background:#6fd06f;box-shadow:0 0 6px #6fd06f}
+
+/* ---------- now card ---------- */
+.now{display:grid;grid-template-columns:1fr auto;gap:18px;padding:18px 20px;margin-top:16px}
+.now .when{font-family:var(--serif);font-size:38px;font-weight:600;line-height:1.05;transition:filter .5s,opacity .5s}
+.now .when.blur{filter:blur(6px);opacity:.2}
+.now .sub{color:var(--sand);margin-top:4px;letter-spacing:.03em}
+.now .era{display:inline-block;margin-top:12px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);border:1px solid var(--line);padding:4px 10px;border-radius:20px}
+.now .lore{color:var(--dim);margin-top:10px;line-height:1.5;max-width:640px;font-style:italic;font-family:var(--serif);font-size:17px}
+.now .src{text-align:right;min-width:230px}
+.src .code{font-family:var(--mono);font-size:30px;color:var(--sand);line-height:1}
+.src .title{font-weight:600;margin-top:4px}
+.src .tc{color:var(--dim);font-size:12px;margin-top:4px}
+.src .next{margin-top:14px;font-size:12px;color:var(--faint)}
+.src .next b{color:var(--dim);font-weight:500}
+
+/* ---------- timelines ---------- */
+.tl{padding:16px 20px 18px;margin-top:16px}
+.tl h3,.side h3{margin:0 0 10px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.axis{position:relative;height:70px}
+.axis .rail{position:absolute;left:0;right:0;top:30px;height:2px;background:linear-gradient(90deg,#1d2e33,#2d4a51,#1d2e33)}
+.axis .tick{position:absolute;top:22px;transform:translateX(-50%);text-align:center;font-size:10px;color:var(--faint);white-space:nowrap}
+.axis .tick::before{content:"";display:block;width:1px;height:18px;background:#2a4148;margin:0 auto 6px}
+.axis .tick.zone{color:var(--dim)}
+.axis .zonebg{position:absolute;top:24px;height:14px;border-radius:7px;background:rgba(79,138,91,.12);border:1px solid rgba(79,138,91,.25)}
+.axis .zonebg.dh{background:rgba(255,181,71,.08);border-color:rgba(255,181,71,.22)}
+.axis .seen{position:absolute;top:29px;height:4px;border-radius:2px;background:rgba(217,199,158,.35)}
+.axis .dot{position:absolute;top:31px;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--sand);box-shadow:0 0 0 4px rgba(217,199,158,.18),0 0 22px rgba(217,199,158,.8);transition:left 1.1s cubic-bezier(.6,0,.2,1)}
+.axis .dot::after{content:attr(data-l);position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--sand);white-space:nowrap;font-weight:600}
+.axis .ghostdot{position:absolute;top:31px;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--sand);opacity:.25}
+.runbar{display:flex;height:34px;border-radius:10px;overflow:hidden;border:1px solid var(--line);margin-top:6px;position:relative}
+.runbar .era{position:relative;height:100%;border-right:1px solid rgba(0,0,0,.5);cursor:pointer;overflow:hidden;min-width:3px}
+.runbar .era span{position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:10px;white-space:nowrap;color:rgba(255,255,255,.75);letter-spacing:.04em;pointer-events:none}
+.runbar .era .fill{position:absolute;inset:0;width:0;background:rgba(255,255,255,.14)}
+.runbar .cursor{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--sand);box-shadow:0 0 10px var(--sand);transition:left .4s}
+.runmeta{display:flex;justify-content:space-between;color:var(--dim);font-size:12px;margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:20px;font-family:var(--serif);font-weight:700}
+.stat span{font-size:11px;color:var(--dim)}
+@media (max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ---------- side ---------- */
+.side{padding:14px 14px 10px;position:sticky;top:14px;max-height:calc(100vh - 28px);display:flex;flex-direction:column}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;border:1px solid var(--line);background:transparent;border-radius:10px;padding:8px 6px;font-size:12px;color:var(--dim)}
+.tabs button.on{background:var(--panel2);color:var(--ink);border-color:#2f4a51}
+.pane{overflow:auto;flex:1;padding-right:4px}
+.pane::-webkit-scrollbar{width:6px}.pane::-webkit-scrollbar-thumb{background:#1f3237;border-radius:6px}
+.chars{display:grid;grid-template-columns:1fr;gap:6px}
+.ch{display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1px solid transparent;background:rgba(255,255,255,.015);transition:background .4s,border-color .4s}
+.ch.changed{border-color:var(--sand);background:rgba(217,199,158,.08)}
+.av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:16px;color:#0b0f10}
+.ch .nm{font-weight:600;font-size:13px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+.chip{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;letter-spacing:.02em}
+.st-unborn{background:#1a2427;color:#7d8f90}
+.st-alive{background:rgba(79,138,91,.22);color:#9ee0a8}
+.st-dead{background:rgba(217,83,79,.18);color:#f19b98}
+.st-travel{background:rgba(169,139,224,.2);color:#cdb8f5}
+.st-smoke{background:#05080a;color:#b7c2c3;border:1px solid #2a3a3e}
+.st-ghost{background:rgba(156,199,224,.15);color:var(--ghost)}
+.st-lost{background:rgba(255,181,71,.15);color:var(--amber)}
+.st-side{background:rgba(232,198,106,.15);color:var(--gold)}
+.st-unknown{background:#141e21;color:#6f8283}
+.ch .nt{font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.35}
+.ch.dim .av{filter:grayscale(1) brightness(.6)}
+.av{cursor:pointer;background-size:cover;background-position:center;position:relative;overflow:hidden}
+.av.ph{color:transparent}
+.av:hover::after{content:"📷";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);font-size:14px;color:#fff}
+.ch.drop{outline:2px dashed var(--sand)}
+.legend{font-size:11px;color:var(--faint);margin:8px 2px 2px;line-height:1.5}
+
+.chap-era{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin:14px 4px 6px}
+.chap{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border-radius:10px;cursor:pointer;color:var(--dim)}
+.chap:hover{background:var(--panel2)}
+.chap.done{color:var(--faint)}
+.chap.done .l::before{content:"✓ ";color:var(--jungle)}
+.chap.cur{background:rgba(217,199,158,.1);color:var(--ink);outline:1px solid rgba(217,199,158,.35)}
+.chap .l{font-size:13px}
+.chap .l small{display:block;font-size:11px;color:var(--faint)}
+.chap .d{font-size:11px;white-space:nowrap;color:var(--faint)}
+
+.set h4{margin:16px 2px 6px;font-size:12px;color:var(--sand)}
+.set p{color:var(--dim);font-size:12px;line-height:1.5;margin:4px 2px}
+.set .rowb{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.set .off{font-family:var(--mono);font-size:24px;color:var(--sand)}
+.set input[type=text]{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#071012;color:var(--ink);font:inherit;font-size:12px}
+.set .vlist{display:grid;grid-template-columns:52px 1fr;gap:4px 8px;font-size:12px;align-items:center}
+.set .vlist .miss{color:var(--amber)}
+kbd{font-family:var(--mono);font-size:15px;background:#0b1517;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;color:var(--sand)}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#0f1b1e;border:1px solid #2f4a51;color:var(--ink);padding:10px 16px;border-radius:12px;opacity:0;transition:.35s;z-index:20;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.failfx{position:fixed;inset:0;pointer-events:none;z-index:30;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85)}
+.failfx.on{display:flex;animation:glitch .18s steps(2) 14}
+.failfx div{font-family:var(--mono);font-size:min(12vw,110px);color:var(--red);letter-spacing:.15em;text-shadow:3px 0 #0ff,-3px 0 #f0f}
+@keyframes glitch{50%{transform:translate(4px,-2px) skewX(4deg)}}
+footer{color:var(--faint);font-size:11.5px;margin-top:22px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="kicker">Хронологический просмотр</span>
+      <h1>Остаться в живых <em>по порядку</em></h1>
+    </div>
+    <div class="numbers" id="numbers"><span>4</span><span>8</span><span>15</span><span>16</span><span>23</span><span>42</span></div>
+    <div class="swan" id="swan" title="Таймер станции «Лебедь»: тикает только пока идёт просмотр. Введите числа, чтобы сбросить.">
+      <div class="clock" id="swanClock">108:00</div>
+      <div>
+        <div class="lbl">&gt;: введите код</div>
+        <input id="swanIn" placeholder="4 8 15 16 23 42" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <main>
+      <div class="stage" id="stage">
+        <iframe id="player" allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write" allowfullscreen></iframe>
+        <div class="flash" id="flash"></div>
+        <div class="hud" id="hud"><div class="hl" id="hudL"></div><div class="hs" id="hudS"></div></div>
+        <div class="overlay" id="startOv">
+          <div>
+            <div class="big">Всё началось <em>не с крушения</em></div>
+            <p>Весь сериал, переставленный в хронологическом порядке: 1 500 фрагментов, около 80 часов. Страница сама переключает сцены и серии, показывает, где вы на линии времени и что сейчас с героями.</p>
+            <div class="row">
+              <button class="btn primary" id="btnResume">▶ Начать</button>
+              <button class="btn" id="btnRestart" hidden>С самого начала</button>
+            </div>
+          </div>
+        </div>
+        <div class="overlay" id="missOv" hidden>
+          <div>
+            <div class="big" style="font-size:32px">Нет ссылки на серию <em id="missCode"></em></div>
+            <p id="missText">Откройте плейлист сезона на Rutube, скопируйте ссылку на эту серию и вставьте сюда.</p>
+            <input type="text" id="missIn" placeholder="https://rutube.ru/video/…">
+            <div class="row">
+              <button class="btn primary" id="missSave">Сохранить и смотреть</button>
+              <button class="btn" id="missSkip">Пропустить фрагменты этой серии</button>
+              <a class="btn" id="missPl" target="_blank" rel="noopener">Открыть плейлист ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="segbar" id="segbar" title="Прогресс текущего фрагмента"><i id="segfill"></i></div>
+      <div class="meta"><span id="segInfo">—</span><span><span class="syncdot" id="syncdot"></span><span id="syncTxt">плеер не подключён</span></span></div>
+
+      <div class="controls">
+        <button class="ctl" id="bPrev" title="Предыдущий фрагмент (←)">⏮</button>
+        <button class="ctl" id="bBack" title="Назад 10 с">↺</button>
+        <button class="ctl play" id="bPlay" title="Пауза / играть (пробел)">▶</button>
+        <button class="ctl" id="bFwd" title="Вперёд 10 с">↻</button>
+        <button class="ctl" id="bNext" title="Следующий фрагмент (→)">⏭</button>
+        <button class="ctl" id="bRestart" title="Фрагмент сначала">⟲</button>
+        <span class="sp"></span>
+        <button class="btn small" id="bSyncHere" title="Нажмите в тот момент, когда на экране начинается нужная сцена">⤓ Здесь начало фрагмента</button>
+        <button class="ctl" id="bFull" title="На весь экран (F)">⛶</button>
+      </div>
+
+      <section class="card now">
+        <div>
+          <div class="when" id="nowWhen">—</div>
+          <div class="sub" id="nowSub"></div>
+          <span class="era" id="nowEra">—</span>
+          <div class="lore" id="nowLore"></div>
+        </div>
+        <div class="src">
+          <div class="code" id="srcCode">—</div>
+          <div class="title" id="srcTitle"></div>
+          <div class="tc" id="srcTc"></div>
+          <div class="next" id="srcNext"></div>
+        </div>
+      </section>
+
+      <section class="card tl">
+        <h3>Время сюжета</h3>
+        <div class="axis" id="axis"></div>
+        <h3 style="margin-top:14px">Ваш просмотр</h3>
+        <div class="runbar" id="runbar"></div>
+        <div class="runmeta"><span id="runLeft">—</span><span id="runRight">—</span></div>
+        <div class="stats">
+          <div class="stat"><b id="stWatched">0 ч</b><span>просмотрено</span></div>
+          <div class="stat"><b id="stLeft">—</b><span>осталось</span></div>
+          <div class="stat"><b id="stSeg">—</b><span>фрагмент</span></div>
+          <div class="stat"><b id="stEps">0</b><span>переключений серий</span></div>
+          <div class="stat"><b id="stJump">—</b><span>самый большой скачок</span></div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="card side">
+      <div class="tabs">
+        <button class="on" data-tab="chars">Герои</button>
+        <button data-tab="chaps">Главы</button>
+        <button data-tab="set">Настройки</button>
+      </div>
+      <div class="pane" id="pane-chars">
+        <div class="chars" id="chars"></div>
+        <div class="legend">Нажмите на кружок героя или перетащите на карточку картинку, чтобы поставить своё фото. Правый клик по кружку — убрать.</div>
+        <input type="file" id="photoIn" accept="image/*" hidden>
+        <div class="legend">Статус меняется по мере просмотра: после главы, в которой это произошло. Годы рождения отмечены «≈», если в сериале их не показывают точно.</div>
+      </div>
+      <div class="pane" id="pane-chaps" hidden></div>
+      <div class="pane set" id="pane-set" hidden>
+        <h4>Синхронизация серии</h4>
+        <p>Таймкоды списка сняты с американской версии, а на Rutube — европейская (PAL): она идёт на 4,3% быстрее. Это уже учтено автоматически. Если в какой-то серии сцена всё равно начинается чуть раньше или позже, сдвиньте серию: сдвиг сохраняется для всей серии, а метка «Здесь начало фрагмента» действует с этого места и дальше.</p>
+        <div class="rowb" style="align-items:center"><span>Серия <b id="offCode">—</b>:</span><span class="off" id="offVal">0 с</span></div>
+        <div class="rowb">
+          <button class="btn small" data-off="-10">−10 с</button>
+          <button class="btn small" data-off="-2">−2 с</button>
+          <button class="btn small" data-off="2">+2 с</button>
+          <button class="btn small" data-off="10">+10 с</button>
+          <button class="btn small" id="offReset">Сбросить</button>
+        </div>
+        <p>Плюс — если в этой версии сцена идёт позже, минус — если раньше.</p>
+        <div class="rowb" style="align-items:center"><span>Общий сдвиг для всех серий:</span><span class="off" id="gOffVal">0 с</span></div>
+        <div class="rowb"><button class="btn small" data-goff="-1">−1 с</button><button class="btn small" data-goff="1">+1 с</button><button class="btn small" data-goff="0">0</button></div>
+        <h4>Переход</h4>
+        <div class="rowb"><input type="text" id="jumpIn" placeholder="Номер фрагмента, например 420"></div>
+        <div class="rowb"><button class="btn small" id="jumpGo">Перейти</button><button class="btn small" id="resetAll">Сбросить весь прогресс</button></div>
+        <h4>Ссылки на серии</h4>
+        <p>Двух серий не было в доступной части плейлистов. Вставьте ссылку, если плеер попросит, или прямо здесь.</p>
+        <div class="vlist" id="vlist"></div>
+        <h4>Клавиши</h4>
+        <p><kbd>Пробел</kbd> пауза · <kbd>←</kbd> <kbd>→</kbd> фрагменты · <kbd>F</kbd> весь экран · <kbd>S</kbd> «здесь начало»</p>
+        <h4>Источник</h4>
+        <p>Порядок сцен — «Lost: A Chronological Experience» (lostchronologically.yolasite.com), проверен и очищен от повторов. Видео — плейлисты канала «Сериал Остаться в живых / Lost» на Rutube. Мини-эпизоды Missing Pieces и эпилог в плейлистах отсутствуют и пропускаются. Финал на Rutube смонтирован короче, чем в версии списка, поэтому он показывается целиком (обе части) в главе «Финал».</p>
+      </div>
+    </aside>
+  </div>
+  <footer>Фанатская страница для личного просмотра. Работает в браузере на компьютере с интернетом; лучше всего в Chrome или Яндекс Браузере. Прогресс хранится в этом браузере.</footer>
+</div>
+<div class="toast" id="toast"></div>
+<div class="failfx" id="failfx"><div>SYSTEM FAILURE</div></div>
+
+<script>
+const DATA = {"videos":{"1x01":{"id":"a21929e50cd9792c7bdf3c3c27ffc337","dur":2435,"title":"Pilot, Part 1"},"1x02":{"id":"aa010fd52f66229b6d52fc662611b15a","dur":2323,"title":"Pilot, Part 2"},"1x03":{"id":"10dd9a69f4193dd6f5dd02272ddac6b4","dur":2503,"title":"Tabula Rasa"},"1x04":{"id":"7cd94247b93a816ac45f8ff512f79a61","dur":2462,"title":"Walkabout"},"1x05":{"id":"4baeb822294a0779986baf05be4ca286","dur":2445,"title":"White Rabbit"},"1x06":{"id":"a8b699f10f8d53df6617d003c321fa04","dur":2467,"title":"House of the Rising Sun"},"1x07":{"id":"f0ddf87926042818777c108c843c84ce","dur":2495,"title":"The Moth"},"1x08":{"id":"08ca6d8bc96f93ca00294137d798bacc","dur":2493,"title":"Confidence Man"},"1x09":{"id":"d28688ed8818627206d2b2ebdc364a4e","dur":2490,"title":"Solitary"},"1x10":{"id":"b47631b0f648422c0f85bb2a563f743d","dur":2470,"title":"Raised by Another"},"1x11":{"id":"3e52347f8c701c4bde66ebad12e2d55c","dur":2435,"title":"All the Best Cowboys Have Daddy Issues"},"1x12":{"id":"11e15e3fd7e607c9095d21e85b2afefc","dur":2494,"title":"Whatever the Case May Be"},"1x13":{"id":"98621574cec3229b2f743d0d5b9ab4d7","dur":2497,"title":"Hearts and Minds"},"1x14":{"id":"0058669d91e72a08e3ccdb23ab8751ba","dur":2496,"title":"Special"},"1x15":{"id":"e66aae4164d3640db2b0757bdc1c22f1","dur":2400,"title":"Homecoming"},"1x16":{"id":"aecd7908946d3e0adcd16885b0916c54","dur":2496,"title":"Outlaws"},"1x17":{"id":"033578ae8e05d53de69aa983eb280efa","dur":2484,"title":"...In Translation"},"1x18":{"id":"d0781d2d3a3879bfb4422f25148b5ba5","dur":2488,"title":"Numbers"},"1x19":{"id":"811d4d0e4c0a405beed115259d437979","dur":2462,"title":"Deus Ex Machina"},"1x20":{"id":"1d261780d212da9be711820ca8de1a84","dur":2496,"title":"Do No Harm"},"1x21":{"id":null,"dur":null,"title":"The Greater Good"},"1x22":{"id":"068b56bb8654e587379833cb29bf9037","dur":2496,"title":"Born to Run"},"1x23":{"id":"fa6c41898f7621926401a76de54ba902","dur":2498,"title":"Exodus, Part 1"},"1x24":{"id":"891b37775b2df54b94b20cd1c14b06b2","dur":2484,"title":"Exodus, Part 2"},"1x25":{"id":"3948f7ae24546d6e25c266939304e35b","dur":2497,"title":"Exodus, Part 3"},"2x01":{"id":"57ad4037c266f53513d075b577b2675b","dur":2489,"title":"Man of Science, Man of Faith"},"2x02":{"id":"286dbef5e1ba38747f0945fd6c4d8b1e","dur":2444,"title":"Adrift"},"2x03":{"id":"033d8ed79df1f5288d74a9a2c45bc810","dur":2487,"title":"Orientation"},"2x04":{"id":"29e6863f909c9a68f3de7a17f701e60d","dur":2486,"title":"Everybody Hates Hugo"},"2x05":{"id":"167d2b6bc6d990ab83b94503ef71051f","dur":2442,"title":"...And Found"},"2x06":{"id":"367702d41a956c730a262828ca16d47f","dur":2466,"title":"Abandoned"},"2x07":{"id":"f45fbf0143e382b6083de14475806c19","dur":2661,"title":"The Other 48 Days"},"2x08":{"id":"7137b7d741404473134c537eb4852939","dur":2442,"title":"Collision"},"2x09":{"id":"e7ec4707fb10856929469c2baf91e1e4","dur":2640,"title":"What Kate Did"},"2x10":{"id":"3bca7f12ad7f8d0c959f25bb8367dcd1","dur":2488,"title":"The 23rd Psalm"},"2x11":{"id":"2d7f896bed56f9e39afa9a8e981177d7","dur":2485,"title":"The Hunting Party"},"2x12":{"id":"870030f82d66aa241fac809113f758f3","dur":2479,"title":"Fire + Water"},"2x13":{"id":"6777bfdb657696be5269a3e4acc8772b","dur":2554,"title":"The Long Con"},"2x14":{"id":"ab976c27fd2fcf847da6972c5f84123f","dur":2572,"title":"One of Them"},"2x15":{"id":"7e93212235de1d084f7371121ba4b57f","dur":2652,"title":"Maternity Leave"},"2x16":{"id":"b688c0d6630713bd1a80d6aa56a27ee2","dur":2488,"title":"The Whole Truth"},"2x17":{"id":"73c4ef3447ccaa729fce287f4c74ada1","dur":2487,"title":"Lockdown"},"2x18":{"id":"a681a525f7b64a6268c1ee7fc2967c0a","dur":2665,"title":"Dave"},"2x19":{"id":"27aeaf2be6c47ff026f266c050366c19","dur":2488,"title":"S.O.S."},"2x20":{"id":"3ac599596fab0ef541e3d77363f16c13","dur":2489,"title":"Two for the Road"},"2x21":{"id":"15367687c3abad572dfad29cd2598f73","dur":2654,"title":"?"},"2x22":{"id":"3da22d2029473e467046d4dc5d46c18c","dur":2605,"title":"Three Minutes"},"2x23":{"id":"d8b6b0e4325ed5269322fc0a07e6dc18","dur":2490,"title":"Live Together, Die Alone, Part 1"},"2x24":{"id":null,"dur":null,"title":"Live Together, Die Alone, Part 2"},"3x01":{"id":"b66c8d68f70b1b49391615c27564e784","dur":2489,"title":"A Tale of Two Cities"},"3x02":{"id":"23711d47b213b72b80e398c90c0e3ae9","dur":2489,"title":"The Glass Ballerina"},"3x03":{"id":"f4525f66c0777c09a4ada7f7670412ac","dur":2420,"title":"Further Instructions"},"3x04":{"id":"0082da3e8166915408e4a7be915b9869","dur":2490,"title":"Every Man for Himself"},"3x05":{"id":"76202a3dc7a3108846b00726bc039c18","dur":2490,"title":"The Cost of Living"},"3x06":{"id":"c491654822ca28fd38cf078b6380943a","dur":2484,"title":"I Do"},"3x07":{"id":"e95bbb383d38da1509883fcb52d20315","dur":2491,"title":"Not in Portland"},"3x08":{"id":"7936fcedc5327044949d51773e3a0841","dur":2485,"title":"Flashes Before Your Eyes"},"3x09":{"id":"00d702e4533c7932e28066596be33a08","dur":2486,"title":"Stranger in a Strange Land"},"3x10":{"id":"65b634455f8419b896264b913a77a3e3","dur":2483,"title":"Tricia Tanaka Is Dead"},"3x11":{"id":"1113a37b49e12c36bcbcd0abba278268","dur":2478,"title":"Enter 77"},"3x12":{"id":"9aa39b3b8c9fc37dfd6edf8e16a9dfad","dur":2479,"title":"Par Avion"},"3x13":{"id":"404deeebb4de8d888e799f497075543a","dur":2486,"title":"The Man from Tallahassee"},"3x14":{"id":"fd4cf9230cdb314d1e656a88bcb23fe9","dur":2445,"title":"Exposé"},"3x15":{"id":"de7a790814c5002d5d71a2c1758f0e98","dur":2483,"title":"Left Behind"},"3x16":{"id":"a3368aa451e76f3f0df09d1af395f66e","dur":2486,"title":"One of Us"},"3x17":{"id":"558c4b6a9d63446543458d4cd8df6ab0","dur":2432,"title":"Catch-22"},"3x18":{"id":"6a220dad9adfbfac7cc29b70527e5048","dur":2484,"title":"D.O.C."},"3x19":{"id":"b83597e85377ea2b7d527258a8c6358c","dur":2487,"title":"The Brig"},"3x20":{"id":"01f830d30067de7c3c309d9979cc5ec5","dur":2484,"title":"The Man Behind the Curtain"},"3x21":{"id":"a2886d9ca90bdd9b948a6b71ca4f1c23","dur":2486,"title":"Greatest Hits"},"3x22":{"id":"c8766b708c319f804440a585386ec4e9","dur":2480,"title":"Through the Looking Glass, Part 1"},"3x23":{"id":"ca0a0347018651c415c5688e4ff88c72","dur":2485,"title":"Through the Looking Glass, Part 2"},"4x01":{"id":"ead6c72b45605e3384319dd2c2b12b2c","dur":2482,"title":"The Beginning of the End"},"4x02":{"id":"b9e33de5166e902c7e61cc791d05dd9a","dur":2483,"title":"Confirmed Dead"},"4x03":{"id":"3b8a8d3c4b71a7add91db7c7bae3ac33","dur":2477,"title":"The Economist"},"4x04":{"id":"dcf1534ee173a31d82f88b07f9d37a44","dur":2477,"title":"Eggtown"},"4x05":{"id":"b89e936bc9bbe58be1320d38a2c196d0","dur":2482,"title":"The Constant"},"4x06":{"id":"bc8a595fbbeed2e1cce1031cfd2447b7","dur":2475,"title":"The Other Woman"},"4x07":{"id":"f8ef7e3ae01c451c4c27e5bc43dd69a6","dur":2460,"title":"Ji Yeon"},"4x08":{"id":"a475371e7dc88d92faccdbd9c2b06e70","dur":2480,"title":"Meet Kevin Johnson"},"4x09":{"id":"bd61437c2670cb1c33d484a93cc848b1","dur":2460,"title":"The Shape of Things to Come"},"4x10":{"id":"fbdb7c882808a44c23530ce60fc059c4","dur":2481,"title":"Something Nice Back Home"},"4x11":{"id":"f12e809b780a2d1947f5de54b72d1f24","dur":2482,"title":"Cabin Fever"},"4x12":{"id":"0386829b83267f91edee2b6760063226","dur":2480,"title":"There's No Place Like Home, Part 1"},"4x13":{"id":"027c5f7a9affff8610ab36ce12ec69ab","dur":2413,"title":"There's No Place Like Home, Part 2"},"4x14":{"id":"eb38d963756d92600eabcfc141ca476c","dur":2482,"title":"There's No Place Like Home, Part 3"},"5x01":{"id":"0bbc0164c99b54e1d879aa306967f6b7","dur":2478,"title":"Because You Left"},"5x02":{"id":"69d8fa5d67e51738ab25177e448c11c4","dur":2427,"title":"The Lie"},"5x03":{"id":"a1ec033d920c1e6cabec6e76005d2c5c","dur":2480,"title":"Jughead"},"5x04":{"id":"38f03eafacb243be6769cb93aa2d34c7","dur":2481,"title":"The Little Prince"},"5x05":{"id":"ef8bd33100e56c497d7a6f1d71e8b951","dur":2481,"title":"This Place Is Death"},"5x06":{"id":"e3c6f4b3c5a4ef3db137474fd89a3dc1","dur":2484,"title":"316"},"5x07":{"id":"ea726f5fe9cd0b441adcff8a3bf4ee97","dur":2670,"title":"The Life and Death of Jeremy Bentham"},"5x08":{"id":"5bb4e833be0f4600e0f4ec245e57adab","dur":2476,"title":"LaFleur"},"5x09":{"id":"0a3fdd3a9f591e1a7e2335b244113b25","dur":2481,"title":"Namaste"},"5x10":{"id":"db0b44251ff2ed2fe7b57e527fbe93ec","dur":2445,"title":"He's Our You"},"5x11":{"id":"24d84441ad8fbe4d53f72915ef80e507","dur":2485,"title":"Whatever Happened, Happened"},"5x12":{"id":"c8e10db8ab2c1aa35a2b34003128c71c","dur":2479,"title":"Dead Is Dead"},"5x13":{"id":"405bf489e52c399241d306af975e63e9","dur":2483,"title":"Some Like It Hoth"},"5x14":{"id":"c6bdc2f33cd60f65bfaa4d8eeb80a83a","dur":2481,"title":"The Variable"},"5x15":{"id":"5fe61f4130fc14ee6115f94c65727da1","dur":2479,"title":"Follow the Leader"},"5x16":{"id":"69a3f21c8d860fbfba977e087347d9e5","dur":2483,"title":"The Incident, Part 1"},"5x17":{"id":"8915861b60dd0364894e8de7f0a8e9d6","dur":2483,"title":"The Incident, Part 2"},"6x01":{"id":"99831382a6d41e2e419ce08193f708e3","dur":2480,"title":"LA X, Part 1"},"6x02":{"id":"310cc716824361e48e12a491229830b0","dur":2412,"title":"LA X, Part 2"},"6x03":{"id":"180da3549c26805a12b2b3141ad5925a","dur":2473,"title":"What Kate Does"},"6x04":{"id":"78e49afbc35403576003b947add44916","dur":2478,"title":"The Substitute"},"6x05":{"id":"99c87ef97babda17e1ea0ec08f67eb95","dur":2534,"title":"Lighthouse"},"6x06":{"id":"758951c6d789b48a97f2c901de754a4c","dur":2419,"title":"Sundown"},"6x07":{"id":"0f66b1a79abf846ba8a0a5e9495237ed","dur":2479,"title":"Dr. Linus"},"6x08":{"id":"95fabbd09fd68930204c0cd8fa58110f","dur":2479,"title":"Recon"},"6x09":{"id":"fa3f8c04cfedb38b483ff43a76ec7962","dur":2740,"title":"Ab Aeterno"},"6x10":{"id":"5a5ccc4bd2f99b46e246bf58255e5195","dur":2480,"title":"The Package"},"6x11":{"id":"262704ffb8fedb1f357b9c294093e24b","dur":2469,"title":"Happily Ever After"},"6x12":{"id":"3ab08fd0d883b9769a1847cd6c026c19","dur":2451,"title":"Everybody Loves Hugo"},"6x13":{"id":"9d59bdcf21f7415226c5a97cb8afe73a","dur":2479,"title":"The Last Recruit"},"6x14":{"id":"37ba3627a2bb2b8241b0b31f1f91b0a9","dur":2480,"title":"The Candidate"},"6x15":{"id":"7375a4ab9d709da4caba0dd1fb92f257","dur":2474,"title":"Across the Sea"},"6x16":{"id":"71b54567704325e868e8705686962adb","dur":2479,"title":"What They Died For"},"6x17":{"id":"15452e8d38197f4a970261718123ed97","dur":2479,"title":"The End, Part 1"},"6x18":{"id":"1ce412c597df12d4e69c0f6c2bea3dc9","dur":2868,"title":"The End, Part 2"}},"headings":[{"key":"p1:1st Century","label":"I век н. э.","sub":"Задолго до всего","t":30,"era":"ancient","n":4,"dur":2512,"first":0},{"key":"p1:1867","label":"1867 год","sub":"","t":1867.5,"era":"blackrock","n":4,"dur":2270,"first":4},{"key":"p1:1954","label":"1954 год","sub":"","t":1954.5,"era":"early","n":6,"dur":718,"first":8},{"key":"p1:1956","label":"1956 год","sub":"","t":1956.5,"era":"early","n":2,"dur":241,"first":14},{"key":"p1:1961","label":"1961 год","sub":"","t":1961.5,"era":"early","n":1,"dur":244,"first":16},{"key":"p1:1963","label":"1963 год","sub":"","t":1963.5,"era":"early","n":1,"dur":128,"first":17},{"key":"p1:1973","label":"1973 год","sub":"","t":1973.5,"era":"early","n":5,"dur":855,"first":18},{"key":"p1:1974","label":"1974 год","sub":"","t":1974.5,"era":"dharma","n":3,"dur":957,"first":23},{"key":"p1:1975","label":"1975 год","sub":"","t":1975.5,"era":"dharma","n":2,"dur":145,"first":26},{"key":"p1:1976","label":"1976 год","sub":"","t":1976.5,"era":"dharma","n":3,"dur":383,"first":28},{"key":"p1:1977","label":"1977 год","sub":"","t":1977.5,"era":"dharma","n":58,"dur":10027,"first":31},{"key":"p1:1981","label":"1981 год","sub":"","t":1981.5,"era":"before","n":1,"dur":53,"first":89},{"key":"p1:1982","label":"1982 год","sub":"","t":1982.5,"era":"before","n":2,"dur":272,"first":90},{"key":"p1:1985","label":"1985 год","sub":"","t":1985.5,"era":"before","n":2,"dur":225,"first":92},{"key":"p1:1986","label":"1986 год","sub":"","t":1986.5,"era":"before","n":1,"dur":85,"first":94},{"key":"p1:1987","label":"1987 год","sub":"","t":1987.5,"era":"before","n":2,"dur":298,"first":95},{"key":"p1:1988","label":"1988 год","sub":"","t":1988.5,"era":"before","n":6,"dur":1246,"first":97},{"key":"p1:1991","label":"1991 год","sub":"","t":1991.5,"era":"before","n":12,"dur":1593,"first":103},{"key":"p1:1992","label":"1992 год","sub":"","t":1992.5,"era":"before","n":5,"dur":964,"first":115},{"key":"p1:1993","label":"1993 год","sub":"","t":1993.5,"era":"before","n":1,"dur":112,"first":120},{"key":"p1:1994","label":"1994 год","sub":"","t":1994.5,"era":"before","n":9,"dur":704,"first":121},{"key":"p1:1995","label":"1995 год","sub":"","t":1995.5,"era":"before","n":11,"dur":1544,"first":130},{"key":"p1:1996","label":"1996 год","sub":"","t":1996.5,"era":"before","n":22,"dur":2702,"first":141},{"key":"p1:1999","label":"1999 год","sub":"","t":1999.5,"era":"before","n":17,"dur":2272,"first":163},{"key":"p1:2000","label":"2000 год","sub":"","t":2000.5,"era":"before","n":28,"dur":3321,"first":180},{"key":"p1:2001","label":"2001 год","sub":"","t":2001.5,"era":"before","n":60,"dur":8313,"first":208},{"key":"p1:2002","label":"2002 год","sub":"","t":2002.5,"era":"before","n":28,"dur":3889,"first":268},{"key":"p1:2003","label":"2003 год","sub":"","t":2003.5,"era":"before","n":33,"dur":3724,"first":296},{"key":"p1:2004","label":"2004 год","sub":"","t":2004.2,"era":"pre2004","n":21,"dur":2753,"first":329},{"key":"p1:June","label":"Июнь 2004","sub":"","t":2004.4583333333333,"era":"pre2004","n":3,"dur":485,"first":350},{"key":"p1:July","label":"Июль 2004","sub":"","t":2004.5416666666667,"era":"pre2004","n":7,"dur":893,"first":353},{"key":"p1:August","label":"Август 2004","sub":"","t":2004.625,"era":"pre2004","n":9,"dur":1053,"first":360},{"key":"p1:September","label":"Сентябрь 2004","sub":"","t":2004.7083333333333,"era":"pre2004","n":28,"dur":3849,"first":369},{"key":"p1:Three Days Until the Crash","label":"19 сентября 2004","sub":"За 3 дня до крушения","t":2004.7158469945355,"era":"pre2004","n":5,"dur":518,"first":397},{"key":"p1:Two Days Until the Crash","label":"20 сентября 2004","sub":"За 2 дня до крушения","t":2004.7185792349726,"era":"pre2004","n":4,"dur":516,"first":402},{"key":"p1:One Day Until the Crash","label":"21 сентября 2004","sub":"За 1 день до крушения","t":2004.72131147541,"era":"pre2004","n":16,"dur":1581,"first":406},{"key":"p1:The Day of the Crash","label":"22 сентября 2004","sub":"День крушения · рейс 815","t":2004.724043715847,"era":"crash","day":1,"n":53,"dur":5216,"first":422},{"key":"p1:Day 2","label":"День 2 на острове","sub":"23 сентября 2004","t":2004.7267759562842,"era":"island","day":2,"n":6,"dur":3670,"first":475},{"key":"p1:Day 3","label":"День 3 на острове","sub":"24 сентября 2004","t":2004.7295081967213,"era":"island","day":3,"n":6,"dur":1354,"first":481},{"key":"p1:Day 4","label":"День 4 на острове","sub":"25 сентября 2004","t":2004.7322404371585,"era":"island","day":4,"n":2,"dur":539,"first":487},{"key":"p1:Day 5","label":"День 5 на острове","sub":"26 сентября 2004","t":2004.7349726775956,"era":"island","day":5,"n":6,"dur":1830,"first":489},{"key":"p1:Day 6","label":"День 6 на острове","sub":"27 сентября 2004","t":2004.7377049180327,"era":"island","day":6,"n":8,"dur":2005,"first":495},{"key":"p1:Day 7","label":"День 7 на острове","sub":"28 сентября 2004","t":2004.74043715847,"era":"island","day":7,"n":8,"dur":1797,"first":503},{"key":"p1:Day 8","label":"День 8 на острове","sub":"29 сентября 2004","t":2004.7431693989072,"era":"island","day":8,"n":6,"dur":1895,"first":511},{"key":"p1:Day 9","label":"День 9 на острове","sub":"30 сентября 2004","t":2004.7459016393443,"era":"island","day":9,"n":3,"dur":779,"first":517},{"key":"p1:Day 10","label":"День 10 на острове","sub":"1 октября 2004","t":2004.7486338797814,"era":"island","day":10,"n":3,"dur":1218,"first":520},{"key":"p1:Day 12","label":"День 12 на острове","sub":"3 октября 2004","t":2004.7540983606557,"era":"island","day":12,"n":3,"dur":637,"first":523},{"key":"p1:Day 13","label":"День 13 на острове","sub":"4 октября 2004","t":2004.7568306010928,"era":"island","day":13,"n":6,"dur":1538,"first":526},{"key":"p1:Day 15","label":"День 15 на острове","sub":"6 октября 2004","t":2004.7622950819673,"era":"island","day":15,"n":5,"dur":751,"first":532},{"key":"p1:Day 16","label":"День 16 на острове","sub":"7 октября 2004","t":2004.7650273224044,"era":"island","day":16,"n":12,"dur":2673,"first":537},{"key":"p1:Day 17","label":"День 17 на острове","sub":"8 октября 2004","t":2004.7677595628415,"era":"island","day":17,"n":1,"dur":44,"first":549},{"key":"p1:Day 18","label":"День 18 на острове","sub":"9 октября 2004","t":2004.7704918032787,"era":"island","day":18,"n":1,"dur":182,"first":550},{"key":"p1:Day 19","label":"День 19 на острове","sub":"10 октября 2004","t":2004.7732240437158,"era":"island","day":19,"n":1,"dur":143,"first":551},{"key":"p1:Day 21","label":"День 21 на острове","sub":"12 октября 2004","t":2004.77868852459,"era":"island","day":21,"n":2,"dur":722,"first":552},{"key":"p1:Day 22","label":"День 22 на острове","sub":"13 октября 2004","t":2004.7814207650274,"era":"island","day":22,"n":6,"dur":1481,"first":554},{"key":"p1:Day 23","label":"День 23 на острове","sub":"14 октября 2004","t":2004.7841530054645,"era":"island","day":23,"n":1,"dur":213,"first":560},{"key":"p1:Day 24","label":"День 24 на острове","sub":"15 октября 2004","t":2004.7868852459017,"era":"island","day":24,"n":8,"dur":2149,"first":561},{"key":"p1:Day 25","label":"День 25 на острове","sub":"16 октября 2004","t":2004.7896174863388,"era":"island","day":25,"n":1,"dur":146,"first":569},{"key":"p1:Day 26","label":"День 26 на острове","sub":"17 октября 2004","t":2004.792349726776,"era":"island","day":26,"n":4,"dur":359,"first":570},{"key":"p1:Day 27","label":"День 27 на острове","sub":"18 октября 2004","t":2004.795081967213,"era":"island","day":27,"n":14,"dur":1917,"first":574},{"key":"p1:Day 28","label":"День 28 на острове","sub":"19 октября 2004","t":2004.7978142076502,"era":"island","day":28,"n":3,"dur":706,"first":588},{"key":"p1:Day 29","label":"День 29 на острове","sub":"20 октября 2004","t":2004.8005464480875,"era":"island","day":29,"n":5,"dur":1023,"first":591},{"key":"p1:Day 30","label":"День 30 на острове","sub":"21 октября 2004","t":2004.8032786885246,"era":"island","day":30,"n":3,"dur":787,"first":596},{"key":"p1:Day 31","label":"День 31 на острове","sub":"22 октября 2004","t":2004.8060109289618,"era":"island","day":31,"n":3,"dur":640,"first":599},{"key":"p1:Day 32","label":"День 32 на острове","sub":"23 октября 2004","t":2004.808743169399,"era":"island","day":32,"n":4,"dur":666,"first":602},{"key":"p1:Day 33","label":"День 33 на острове","sub":"24 октября 2004","t":2004.811475409836,"era":"island","day":33,"n":7,"dur":976,"first":606},{"key":"p1:Day 34","label":"День 34 на острове","sub":"25 октября 2004","t":2004.8142076502731,"era":"island","day":34,"n":1,"dur":86,"first":613},{"key":"p1:Day 35","label":"День 35 на острове","sub":"26 октября 2004","t":2004.8169398907103,"era":"island","day":35,"n":1,"dur":127,"first":614},{"key":"p1:Day 36","label":"День 36 на острове","sub":"27 октября 2004","t":2004.8196721311476,"era":"island","day":36,"n":6,"dur":1471,"first":615},{"key":"p1:Day 39","label":"День 39 на острове","sub":"30 октября 2004","t":2004.827868852459,"era":"island","day":39,"n":1,"dur":176,"first":621},{"key":"p1:Day 40","label":"День 40 на острове","sub":"31 октября 2004","t":2004.8306010928961,"era":"island","day":40,"n":2,"dur":234,"first":622},{"key":"p1:Day 41","label":"День 41 на острове","sub":"1 ноября 2004","t":2004.8333333333333,"era":"island","day":41,"n":23,"dur":3349,"first":624},{"key":"p1:Day 42","label":"День 42 на острове","sub":"2 ноября 2004","t":2004.8360655737704,"era":"island","day":42,"n":8,"dur":1799,"first":647},{"key":"p1:Day 43","label":"День 43 на острове","sub":"3 ноября 2004","t":2004.8387978142077,"era":"island","day":43,"n":5,"dur":1614,"first":655},{"key":"p1:Day 44","label":"День 44 на острове","sub":"4 ноября 2004","t":2004.8415300546449,"era":"island","day":44,"n":13,"dur":4624,"first":660},{"key":"p1:Day 45","label":"День 45 на острове","sub":"5 ноября 2004","t":2004.844262295082,"era":"island","day":45,"n":28,"dur":4413,"first":673},{"key":"p1:Day 46","label":"День 46 на острове","sub":"6 ноября 2004","t":2004.8469945355191,"era":"island","day":46,"n":9,"dur":1895,"first":701},{"key":"p1:Day 47","label":"День 47 на острове","sub":"7 ноября 2004","t":2004.8497267759562,"era":"island","day":47,"n":8,"dur":2167,"first":710},{"key":"p1:Day 48","label":"День 48 на острове","sub":"8 ноября 2004","t":2004.8524590163934,"era":"island","day":48,"n":12,"dur":3374,"first":718},{"key":"p1:Day 49","label":"День 49 на острове","sub":"9 ноября 2004","t":2004.8551912568305,"era":"island","day":49,"n":6,"dur":2102,"first":730},{"key":"p1:Day 51","label":"День 51 на острове","sub":"11 ноября 2004","t":2004.860655737705,"era":"island","day":51,"n":6,"dur":1599,"first":736},{"key":"p1:Day 52","label":"День 52 на острове","sub":"12 ноября 2004","t":2004.863387978142,"era":"island","day":52,"n":13,"dur":1620,"first":742},{"key":"p1:Day 53","label":"День 53 на острове","sub":"13 ноября 2004","t":2004.8661202185792,"era":"island","day":53,"n":2,"dur":199,"first":755},{"key":"p1:Day 54","label":"День 54 на острове","sub":"14 ноября 2004","t":2004.8688524590164,"era":"island","day":54,"n":4,"dur":767,"first":757},{"key":"p1:Day 55","label":"День 55 на острове","sub":"15 ноября 2004","t":2004.8715846994535,"era":"island","day":55,"n":4,"dur":1036,"first":761},{"key":"p1:Day 56","label":"День 56 на острове","sub":"16 ноября 2004","t":2004.8743169398906,"era":"island","day":56,"n":1,"dur":283,"first":765},{"key":"p1:Day 57","label":"День 57 на острове","sub":"17 ноября 2004","t":2004.877049180328,"era":"island","day":57,"n":7,"dur":1803,"first":766},{"key":"p1:Day 58","label":"День 58 на острове","sub":"18 ноября 2004","t":2004.879781420765,"era":"island","day":58,"n":5,"dur":1699,"first":773},{"key":"p1:Day 59","label":"День 59 на острове","sub":"19 ноября 2004","t":2004.8825136612022,"era":"island","day":59,"n":6,"dur":2019,"first":778},{"key":"p1:Day 60","label":"День 60 на острове","sub":"20 ноября 2004","t":2004.8852459016393,"era":"island","day":60,"n":4,"dur":1196,"first":784},{"key":"p1:Day 61","label":"День 61 на острове","sub":"21 ноября 2004","t":2004.8879781420765,"era":"island","day":61,"n":7,"dur":2196,"first":788},{"key":"p1:Day 62","label":"День 62 на острове","sub":"22 ноября 2004","t":2004.8907103825136,"era":"island","day":62,"n":5,"dur":2307,"first":795},{"key":"p1:Day 63","label":"День 63 на острове","sub":"23 ноября 2004","t":2004.8934426229507,"era":"island","day":63,"n":8,"dur":1818,"first":800},{"key":"p1:Day 64","label":"День 64 на острове","sub":"24 ноября 2004","t":2004.896174863388,"era":"island","day":64,"n":9,"dur":2359,"first":808},{"key":"p1:Day 65","label":"День 65 на острове","sub":"25 ноября 2004","t":2004.8989071038252,"era":"island","day":65,"n":10,"dur":3227,"first":817},{"key":"p1:Day 66","label":"День 66 на острове","sub":"26 ноября 2004","t":2004.9016393442623,"era":"island","day":66,"n":3,"dur":750,"first":827},{"key":"p1:Day 67","label":"День 67 на острове","sub":"27 ноября 2004","t":2004.9043715846994,"era":"island","day":67,"n":9,"dur":2192,"first":830},{"key":"p1:Day 68","label":"День 68 на острове","sub":"28 ноября 2004","t":2004.9071038251366,"era":"island","day":68,"n":20,"dur":4196,"first":839},{"key":"p1:Day 69","label":"День 69 на острове","sub":"29 ноября 2004","t":2004.9098360655737,"era":"island","day":69,"n":6,"dur":1755,"first":859},{"key":"p1:Day 70","label":"День 70 на острове","sub":"30 ноября 2004","t":2004.9125683060108,"era":"island","day":70,"n":5,"dur":1833,"first":865},{"key":"p1:Day 71","label":"День 71 на острове","sub":"1 декабря 2004","t":2004.9153005464482,"era":"island","day":71,"n":4,"dur":802,"first":870},{"key":"p1:Day 72","label":"День 72 на острове","sub":"2 декабря 2004","t":2004.9180327868853,"era":"island","day":72,"n":12,"dur":2662,"first":874},{"key":"p1:Day 73","label":"День 73 на острове","sub":"3 декабря 2004","t":2004.9207650273224,"era":"island","day":73,"n":17,"dur":3384,"first":886},{"key":"p1:Day 74","label":"День 74 на острове","sub":"4 декабря 2004","t":2004.9234972677596,"era":"island","day":74,"n":5,"dur":1183,"first":903},{"key":"p1:Day 75","label":"День 75 на острове","sub":"5 декабря 2004","t":2004.9262295081967,"era":"island","day":75,"n":4,"dur":638,"first":908},{"key":"p1:Day 76","label":"День 76 на острове","sub":"6 декабря 2004","t":2004.9289617486338,"era":"island","day":76,"n":10,"dur":2503,"first":912},{"key":"p1:Day 77","label":"День 77 на острове","sub":"7 декабря 2004","t":2004.931693989071,"era":"island","day":77,"n":2,"dur":286,"first":922},{"key":"p1:Day 78","label":"День 78 на острове","sub":"8 декабря 2004","t":2004.9344262295083,"era":"island","day":78,"n":9,"dur":2058,"first":924},{"key":"p1:Day 80","label":"День 80 на острове","sub":"10 декабря 2004","t":2004.9398907103825,"era":"island","day":80,"n":11,"dur":2755,"first":933},{"key":"p1:Day 81","label":"День 81 на острове","sub":"11 декабря 2004","t":2004.9426229508197,"era":"island","day":81,"n":26,"dur":3645,"first":944},{"key":"p1:Day 82","label":"День 82 на острове","sub":"12 декабря 2004","t":2004.9453551912568,"era":"island","day":82,"n":5,"dur":911,"first":970},{"key":"p1:Day 83","label":"День 83 на острове","sub":"13 декабря 2004","t":2004.948087431694,"era":"island","day":83,"n":3,"dur":657,"first":975},{"key":"p1:Day 84","label":"День 84 на острове","sub":"14 декабря 2004","t":2004.950819672131,"era":"island","day":84,"n":8,"dur":1539,"first":978},{"key":"p1:Day 85","label":"День 85 на острове","sub":"15 декабря 2004","t":2004.9535519125684,"era":"island","day":85,"n":11,"dur":1461,"first":986},{"key":"p1:Day 86","label":"День 86 на острове","sub":"16 декабря 2004","t":2004.9562841530055,"era":"island","day":86,"n":5,"dur":1213,"first":997},{"key":"p1:Day 87","label":"День 87 на острове","sub":"17 декабря 2004","t":2004.9590163934427,"era":"island","day":87,"n":1,"dur":123,"first":1002},{"key":"p1:Day 88","label":"День 88 на острове","sub":"18 декабря 2004","t":2004.9617486338798,"era":"island","day":88,"n":1,"dur":90,"first":1003},{"key":"p1:Day 89","label":"День 89 на острове","sub":"19 декабря 2004","t":2004.964480874317,"era":"island","day":89,"n":11,"dur":2773,"first":1004},{"key":"p1:Day 90","label":"День 90 на острове","sub":"20 декабря 2004","t":2004.967213114754,"era":"island","day":90,"n":13,"dur":2791,"first":1015},{"key":"p1:Day 91","label":"День 91 на острове","sub":"21 декабря 2004","t":2004.9699453551912,"era":"island","day":91,"n":8,"dur":3945,"first":1028},{"key":"p1:Day 92","label":"День 92 на острове","sub":"22 декабря 2004","t":2004.9726775956285,"era":"island","day":92,"n":12,"dur":3355,"first":1036},{"key":"p1:Day 93","label":"День 93 на острове","sub":"23 декабря 2004","t":2004.9754098360656,"era":"island","day":93,"n":5,"dur":1362,"first":1048},{"key":"p1:Day 94","label":"День 94 на острове","sub":"24 декабря 2004","t":2004.9781420765028,"era":"island","day":94,"n":7,"dur":2799,"first":1053},{"key":"p1:Day 95","label":"День 95 на острове","sub":"25 декабря 2004","t":2004.98087431694,"era":"island","day":95,"n":6,"dur":1406,"first":1060},{"key":"p1:Day 96","label":"День 96 на острове","sub":"26 декабря 2004","t":2004.983606557377,"era":"island","day":96,"n":4,"dur":1853,"first":1066},{"key":"p1:Day 97","label":"День 97 на острове","sub":"27 декабря 2004","t":2004.9863387978141,"era":"island","day":97,"n":7,"dur":1807,"first":1070},{"key":"p1:Day 98","label":"День 98 на острове","sub":"28 декабря 2004","t":2004.9890710382513,"era":"island","day":98,"n":6,"dur":1349,"first":1077},{"key":"p1:Day 99","label":"День 99 на острове","sub":"29 декабря 2004","t":2004.9918032786886,"era":"island","day":99,"n":8,"dur":1778,"first":1083},{"key":"p1:Day 100","label":"День 100 на острове","sub":"30 декабря 2004","t":2004.9945355191257,"era":"island","day":100,"n":8,"dur":4353,"first":1091},{"key":"p1:Day 101","label":"День 101 на острове","sub":"31 декабря 2004","t":2004.9972677595629,"era":"island","day":101,"n":1,"dur":347,"first":1099},{"key":"p1:Day 103","label":"День 103 на острове","sub":"2 января 2005","t":2005.0027322404371,"era":"island","day":103,"n":5,"dur":1259,"first":1100},{"key":"p1:Day 104","label":"День 104 на острове","sub":"3 января 2005","t":2005.0054644808743,"era":"island","day":104,"n":2,"dur":308,"first":1105},{"key":"p1:Day 105","label":"День 105 на острове","sub":"4 января 2005","t":2005.0081967213114,"era":"island","day":105,"n":13,"dur":1563,"first":1107},{"key":"p1:Day 106","label":"День 106 на острове","sub":"5 января 2005","t":2005.0109289617487,"era":"island","day":106,"n":2,"dur":506,"first":1120},{"key":"p1:Day 107","label":"День 107 на острове","sub":"6 января 2005","t":2005.0136612021859,"era":"island","day":107,"n":2,"dur":296,"first":1122},{"key":"p1:Day 108","label":"День 108 на острове","sub":"7 января 2005","t":2005.016393442623,"era":"island","day":108,"n":10,"dur":1629,"first":1124},{"key":"p2:January","label":"Январь 2005","sub":"","t":2005.0416666666667,"era":"off","n":2,"dur":571,"first":1134},{"key":"p2:February","label":"Февраль 2005","sub":"","t":2005.125,"era":"off","n":1,"dur":258,"first":1136},{"key":"p2:May","label":"Май 2005","sub":"","t":2005.375,"era":"off","n":1,"dur":132,"first":1137},{"key":"p2:June","label":"Июнь 2005","sub":"","t":2005.4583333333333,"era":"off","n":1,"dur":235,"first":1138},{"key":"p2:July","label":"Июль 2005","sub":"","t":2005.5416666666667,"era":"off","n":5,"dur":678,"first":1139},{"key":"p2:October","label":"Октябрь 2005","sub":"","t":2005.7916666666667,"era":"off","n":6,"dur":870,"first":1144},{"key":"p2:November","label":"Ноябрь 2005","sub":"","t":2005.875,"era":"off","n":1,"dur":149,"first":1150},{"key":"p2:2006","label":"2006 год","sub":"","t":2006.4,"era":"off","n":8,"dur":1663,"first":1151},{"key":"p2:2007","label":"2007 год","sub":"","t":2007.4,"era":"off","n":22,"dur":4903,"first":1159},{"key":"p2:Twenty Days Until the End","label":"За 20 дней до финала","sub":"2007","t":2007.8453551912569,"era":"return","n":1,"dur":567,"first":1181},{"key":"p2:Nineteen Days Until the End","label":"За 19 дней до финала","sub":"2007","t":2007.848087431694,"era":"return","n":2,"dur":243,"first":1182},{"key":"p2:Eighteen Days Until the End","label":"За 18 дней до финала","sub":"2007","t":2007.8508196721311,"era":"return","n":15,"dur":2427,"first":1184},{"key":"p2:Seventeen Days Until the End","label":"За 17 дней до финала","sub":"2007","t":2007.8535519125685,"era":"return","n":6,"dur":1864,"first":1199},{"key":"p2:Sixteen Days Until the End","label":"За 16 дней до финала","sub":"2007","t":2007.8562841530056,"era":"return","n":12,"dur":2411,"first":1205},{"key":"p2:Fifteen Days Until the End","label":"За 15 дней до финала","sub":"2007","t":2007.8590163934427,"era":"return","n":7,"dur":1149,"first":1217},{"key":"p2:Fourteen Days Until the End","label":"За 14 дней до финала","sub":"2007","t":2007.8617486338799,"era":"return","n":10,"dur":1443,"first":1224},{"key":"p2:Thirteen Days Until the End","label":"За 13 дней до финала","sub":"2007","t":2007.864480874317,"era":"return","n":7,"dur":1020,"first":1234},{"key":"p2:Twelve Days Until the End","label":"За 12 дней до финала","sub":"2007","t":2007.8672131147541,"era":"return","n":7,"dur":798,"first":1241},{"key":"p2:Eleven Days Until the End","label":"За 11 дней до финала","sub":"2007","t":2007.8699453551912,"era":"return","n":6,"dur":1275,"first":1248},{"key":"p2:Ten Days Until the End","label":"За 10 дней до финала","sub":"2007","t":2007.8726775956286,"era":"return","n":15,"dur":2356,"first":1254},{"key":"p2:Nine Days Until the End","label":"За 9 дней до финала","sub":"2007","t":2007.8754098360657,"era":"return","n":31,"dur":2754,"first":1269},{"key":"p2:Eight Days Until the End","label":"За 8 дней до финала","sub":"2007","t":2007.8781420765029,"era":"return","n":19,"dur":5337,"first":1300},{"key":"p2:Seven Days Until the End","label":"За 7 дней до финала","sub":"2007","t":2007.88087431694,"era":"return","n":20,"dur":4925,"first":1319},{"key":"p2:Six Days Until the End","label":"За 6 дней до финала","sub":"2007","t":2007.883606557377,"era":"return","n":17,"dur":3388,"first":1339},{"key":"p2:Five Days Until the End","label":"За 5 дней до финала","sub":"2007","t":2007.8863387978142,"era":"return","n":9,"dur":2266,"first":1356},{"key":"p2:Four Days Until the End","label":"За 4 дня до финала","sub":"2007","t":2007.8890710382514,"era":"return","n":7,"dur":1798,"first":1365},{"key":"p2:Three Days Until the End","label":"За 3 дня до финала","sub":"2007","t":2007.8918032786887,"era":"return","n":8,"dur":1490,"first":1372},{"key":"p2:Two Days Until the End","label":"За 2 дня до финала","sub":"2007","t":2007.8945355191258,"era":"return","n":4,"dur":1464,"first":1380},{"key":"p2:One Day Until the End","label":"За 1 день до финала","sub":"2007","t":2007.897267759563,"era":"return","n":6,"dur":1550,"first":1384},{"key":"p2:The End","label":"Финал","sub":"2007","t":2007.9,"era":"finale","n":2,"dur":5347,"first":1390},{"key":"p2:The Epilogue","label":"Эпилог","sub":"","t":2007.95,"era":"finale","n":0,"dur":0},{"key":"p2:Timeless Purgatory","label":"Вне времени","sub":"Мир «флэш-сайдвейз»","t":null,"era":"sideways","n":83,"dur":12740,"first":1416}],"segments":[[0,"6x15",0,2459,2459],[0,"6x15",2473,2484,11],[0,"6x15",2495,2507,12],[0,"6x15",2526,null,30],[1,"6x09",363,940,577],[1,"5x16",0,219,219],[1,"6x09",941,2385,1444],[1,"6x09",2718,null,30],[2,"5x03",728,785,57],[2,"5x03",1085,1189,104],[2,"5x03",1526,1627,101],[2,"5x03",1696,1967,271],[2,"5x03",2146,2237,91],[2,"5x03",2380,2474,94],[3,"4x11",0,145,145],[3,"4x11",565,661,96],[4,"4x11",749,993,244],[5,"3x20",57,185,128],[6,"3x20",406,574,168],[6,"4x11",1358,1477,119],[6,"3x20",780,930,150],[6,"3x20",1036,1222,186],[6,"3x20",1403,1635,232],[7,"5x08",770,1095,325],[7,"5x08",1323,1465,142],[7,"5x08",1550,2040,490],[8,"1x05",0,35,35],[8,"1x05",644,754,110],[9,"1x16",70,163,93],[9,"5x16",817,979,162],[9,"5x10",67,195,128],[10,"5x08",260,555,295],[10,"5x08",1100,1320,220],[10,"5x08",2145,null,331],[10,"5x09",555,787,232],[10,"5x09",956,1035,79],[10,"5x09",1127,1232,105],[10,"5x09",1276,1406,130],[10,"5x09",1579,1894,315],[10,"5x09",2093,null,388],[10,"5x10",196,307,111],[10,"5x10",451,778,327],[10,"5x10",852,969,117],[10,"5x10",1100,1298,198],[10,"5x10",1489,1885,396],[10,"5x10",1969,2240,271],[10,"5x10",2345,null,100],[10,"5x11",82,290,208],[10,"5x11",548,725,177],[10,"5x11",803,850,47],[10,"5x11",958,990,32],[10,"5x11",1010,1143,133],[10,"5x11",1259,1415,156],[10,"5x11",1569,1640,71],[10,"5x11",1769,1835,66],[10,"5x11",2337,2504,167],[10,"5x12",0,206,206],[10,"5x13",155,417,262],[10,"5x13",573,900,327],[10,"5x13",1060,1335,275],[10,"5x13",1529,1680,151],[10,"5x13",2147,2260,113],[10,"5x13",2437,2550,113],[10,"5x01",44,170,126],[10,"5x14",366,453,87],[10,"5x01",180,257,77],[10,"5x14",587,664,77],[10,"5x14",864,1006,142],[10,"5x14",1259,1653,394],[10,"5x14",1807,2018,211],[10,"5x14",2384,null,97],[10,"5x15",140,208,68],[10,"5x15",587,700,113],[10,"5x15",779,1209,430],[10,"5x15",1502,1660,158],[10,"5x15",1893,2040,147],[10,"5x15",2198,2356,158],[10,"5x15",2390,2445,55],[10,"5x16",345,561,216],[10,"5x16",1005,1184,179],[10,"5x16",1344,1645,301],[10,"5x16",1712,1750,38],[10,"5x16",2489,2550,61],[10,"5x17",20,62,42],[10,"5x17",681,760,79],[10,"5x17",840,875,35],[10,"5x17",1082,1192,110],[10,"5x17",1600,1991,391],[10,"5x17",2430,2546,116],[11,"5x17",532,585,53],[12,"3x05",54,150,96],[12,"2x10",52,228,176],[13,"5x13",0,154,154],[13,"3x21",632,703,71],[14,"3x02",30,115,85],[15,"5x16",220,342,122],[15,"3x10",0,176,176],[16,"5x14",212,347,135],[16,"5x04",2200,2260,60],[16,"5x04",2417,null,64],[16,"5x05",186,937,751],[16,"5x12",418,538,120],[16,"5x12",948,1064,116],[17,"2x14",70,259,189],[17,"2x14",439,533,94],[17,"2x14",850,1007,157],[17,"2x14",1371,1583,212],[17,"2x14",2390,2525,135],[17,"1x19",29,99,70],[17,"1x19",314,442,128],[17,"1x19",666,889,223],[17,"1x19",1170,1241,71],[17,"1x19",1499,1542,43],[17,"1x19",1661,1692,31],[17,"1x19",2239,2479,240],[18,"2x03",188,343,155],[18,"2x03",519,680,161],[18,"2x03",1266,1404,138],[18,"2x03",1797,1943,146],[18,"3x20",2048,2412,364],[19,"5x12",1443,1555,112],[20,"3x17",256,357,101],[20,"3x17",826,903,77],[20,"3x17",1361,1517,156],[20,"3x17",1883,2027,144],[20,"3x17",2257,2331,74],[20,"3x17",2349,2385,36],[20,"3x17",2396,2412,16],[20,"3x17",2421,2445,24],[20,"1x14",124,200,76],[21,"1x09",437,552,115],[21,"1x09",796,953,157],[21,"1x09",1569,1639,70],[21,"1x09",1797,1891,94],[21,"1x09",2019,2155,136],[21,"1x14",378,520,142],[21,"2x17",73,169,96],[21,"2x17",513,619,106],[21,"2x17",796,975,179],[21,"2x17",1324,1523,199],[21,"2x17",1884,2134,250],[22,"3x03",367,546,179],[22,"3x03",977,1126,149],[22,"3x03",1379,1503,124],[22,"3x03",1717,1816,99],[22,"3x03",2041,2197,156],[22,"5x14",665,863,198],[22,"1x14",776,838,62],[22,"1x14",1188,1364,176],[22,"3x21",1626,1718,92],[22,"3x08",765,838,73],[22,"3x08",917,955,38],[22,"3x08",966,1120,154],[22,"3x08",1421,1517,96],[22,"3x08",1873,2120,247],[22,"5x13",417,572,155],[22,"2x02",305,410,105],[22,"2x02",771,886,115],[22,"2x02",1384,1529,145],[22,"2x02",2178,2357,179],[22,"4x05",814,886,72],[22,"4x05",2120,2185,65],[22,"4x05",2321,2344,23],[23,"2x23",316,512,196],[23,"2x05",102,277,175],[23,"2x05",618,728,110],[23,"2x05",1075,1203,128],[23,"2x05",1492,1668,176],[23,"2x05",1864,1952,88],[23,"2x05",2435,2480,45],[23,"3x11",461,553,92],[23,"3x11",883,965,82],[23,"3x11",1280,1443,163],[23,"3x11",1480,1591,111],[23,"3x11",2161,2432,271],[23,"3x12",47,98,51],[23,"3x12",432,523,91],[23,"3x12",878,1018,140],[23,"3x12",1413,1534,121],[23,"3x12",1726,1958,232],[24,"1x07",158,279,121],[24,"1x07",606,673,67],[24,"5x17",62,247,185],[24,"3x21",264,331,67],[24,"1x06",192,295,103],[24,"1x17",20,129,109],[24,"1x06",616,721,105],[24,"3x13",40,132,92],[24,"3x13",303,448,145],[24,"3x13",816,939,123],[24,"3x13",1354,1421,67],[24,"3x13",2086,2292,206],[24,"5x16",1248,1312,64],[24,"1x07",915,1009,94],[24,"1x07",1545,1692,147],[24,"5x16",2550,2645,95],[24,"1x17",258,387,129],[24,"4x11",1713,1887,174],[24,"3x18",142,273,131],[24,"3x18",380,484,104],[24,"3x18",882,1065,183],[24,"3x18",1200,1371,171],[24,"3x18",1958,2104,146],[24,"3x18",2211,2272,61],[24,"3x21",1323,1457,134],[24,"4x07",367,473,106],[24,"4x07",953,1048,95],[24,"4x07",2190,2287,97],[25,"2x23",818,1023,205],[25,"2x01",368,475,107],[25,"2x06",535,660,125],[25,"2x01",901,1040,139],[25,"2x01",1333,1480,147],[25,"2x23",1329,1487,158],[25,"2x01",1811,2044,233],[25,"2x01",2285,2490,205],[25,"2x06",961,1122,161],[25,"2x06",1524,1722,198],[25,"2x06",2182,2307,125],[25,"1x08",92,174,82],[25,"1x08",481,550,69],[25,"1x08",965,1042,77],[25,"1x08",1530,1618,88],[25,"1x08",1998,2076,78],[25,"2x13",287,437,150],[25,"2x13",957,1056,99],[25,"2x12",400,551,151],[25,"2x12",954,1063,109],[25,"2x12",1453,1597,144],[25,"2x12",1929,2033,104],[25,"2x13",1314,1427,113],[25,"2x13",1555,1686,131],[25,"2x13",1991,2135,144],[25,"2x13",2492,2589,97],[25,"2x23",1868,2062,194],[25,"2x09",163,449,286],[25,"2x09",879,947,68],[25,"2x09",1390,1580,190],[25,"2x09",1938,2128,190],[25,"2x23",2063,2139,76],[25,"3x15",126,263,137],[25,"3x15",549,668,119],[25,"3x15",962,1146,184],[25,"3x15",1641,1801,160],[25,"3x15",2378,2455,77],[25,"3x07",51,213,162],[25,"3x07",330,494,164],[25,"3x07",791,922,131],[25,"3x07",1176,1312,136],[25,"3x07",1602,1752,150],[25,"3x07",2194,2244,50],[25,"3x07",2346,2491,145],[25,"3x16",188,315,127],[25,"3x16",502,795,293],[25,"4x06",34,205,171],[25,"2x10",517,677,160],[25,"2x10",947,1126,179],[25,"2x10",1361,1510,149],[25,"2x10",1918,2052,134],[25,"2x10",2146,2171,25],[25,"3x05",669,801,132],[25,"5x01",1028,1221,193],[25,"3x05",982,1114,132],[25,"3x05",1426,1503,77],[25,"3x05",1692,1801,109],[25,"3x05",2105,2192,87],[25,"5x01",2358,2459,101],[25,"4x06",423,609,186],[26,"4x06",823,1007,184],[26,"1x15",395,497,102],[26,"1x15",828,891,63],[26,"1x15",1027,1200,173],[26,"1x15",1477,1597,120],[26,"1x15",1771,1821,50],[26,"1x15",2246,2350,104],[26,"1x06",932,1000,68],[26,"1x22",0,152,152],[26,"1x22",392,482,90],[26,"1x22",968,1097,129],[26,"1x22",1348,1578,230],[26,"1x22",1778,2044,266],[26,"3x04",454,615,161],[26,"3x04",1149,1261,112],[26,"3x04",1600,1678,78],[26,"3x04",2117,2257,140],[26,"3x16",1043,1247,204],[26,"3x06",25,112,87],[26,"3x06",284,385,101],[26,"3x06",706,854,148],[26,"3x06",1066,1209,143],[26,"2x18",431,604,173],[26,"2x18",1031,1180,149],[26,"2x18",1491,1884,393],[26,"2x18",2711,null,30],[26,"3x06",1564,1642,78],[26,"3x06",1923,2084,161],[27,"1x20",139,192,53],[27,"1x20",404,483,79],[27,"1x20",871,996,125],[27,"1x20",1501,1663,162],[27,"1x20",1941,2062,121],[27,"1x18",157,238,81],[27,"2x04",385,468,83],[27,"2x04",870,995,125],[27,"2x04",1419,1515,96],[27,"2x04",1951,2065,114],[27,"2x04",2100,2132,32],[27,"2x04",2160,2166,6],[27,"2x04",2182,2190,8],[27,"2x04",2228,2242,14],[27,"1x18",341,421,80],[27,"1x17",831,972,141],[27,"1x17",1238,1550,312],[27,"1x12",644,719,75],[27,"1x12",1170,1262,92],[27,"1x12",1582,1638,56],[27,"1x12",1996,2105,109],[27,"1x18",612,764,152],[27,"2x11",40,198,158],[27,"2x11",506,733,227],[27,"2x11",1045,1180,135],[27,"2x11",1362,1517,155],[27,"2x11",2181,2404,223],[27,"2x24",161,325,164],[27,"3x01",279,325,46],[27,"3x01",641,760,119],[27,"3x01",1061,1169,108],[27,"3x01",1635,1795,160],[27,"3x01",2323,2436,113],[28,"2x19",326,447,121],[28,"3x09",227,379,152],[28,"3x09",727,836,109],[28,"3x09",1043,1163,120],[28,"3x09",1700,1935,235],[28,"3x09",2012,2075,63],[28,"2x24",445,569,124],[28,"1x14",1592,1688,96],[28,"2x08",63,178,115],[28,"2x08",338,463,125],[28,"2x08",656,781,125],[28,"2x08",1220,1320,100],[28,"2x08",2037,2109,72],[28,"2x20",110,239,129],[28,"1x10",352,488,136],[28,"1x10",699,836,137],[28,"3x14",30,187,157],[28,"1x18",793,894,101],[28,"1x10",1012,1158,146],[28,"1x10",1462,1663,201],[28,"3x12",2148,2337,189],[29,"1x03",437,543,106],[29,"1x18",1092,1284,192],[29,"2x19",711,898,187],[30,"2x16",31,197,166],[30,"2x16",461,603,142],[30,"1x11",239,324,85],[30,"1x11",436,530,94],[30,"1x11",1101,1341,240],[30,"1x11",1793,1838,45],[30,"1x11",1868,1989,121],[31,"2x16",1014,1129,115],[31,"2x16",1535,1648,113],[31,"2x16",2041,2131,90],[31,"1x21",160,287,127],[31,"3x02",508,624,116],[31,"3x02",734,853,119],[31,"3x02",1151,1292,141],[31,"3x02",1605,1758,153],[31,"3x02",1970,2049,79],[32,"3x10",417,575,158],[32,"3x10",876,959,83],[32,"3x10",1231,1382,151],[32,"1x21",651,842,191],[32,"1x04",547,591,44],[32,"1x04",1191,1304,113],[32,"1x04",1592,1696,104],[32,"4x06",1226,1342,116],[32,"3x10",1558,1742,184],[32,"2x20",367,548,181],[32,"1x04",2352,2438,86],[32,"3x10",1949,2067,118],[32,"1x16",372,552,180],[32,"1x05",872,973,101],[32,"1x21",1264,1400,136],[32,"1x21",1684,1778,94],[32,"1x18",1447,1686,239],[32,"2x19",1154,1292,138],[32,"2x19",1746,1913,167],[32,"1x16",798,881,83],[32,"2x20",820,969,149],[32,"1x14",1717,1881,164],[32,"1x16",1554,1703,149],[32,"2x20",1211,1358,147],[32,"1x16",1704,1983,279],[32,"1x16",2161,2261,100],[32,"2x21",510,668,158],[32,"1x13",170,206,36],[33,"1x06",1748,1862,114],[33,"1x13",649,707,58],[33,"1x13",949,1030,81],[33,"2x21",848,942,94],[33,"3x14",246,417,171],[34,"1x14",1898,1981,83],[34,"1x14",2010,2150,140],[34,"1x17",2006,2168,162],[34,"2x21",1399,1530,131],[35,"1x03",1061,1165,104],[35,"1x10",1664,1712,48],[35,"1x03",1291,1376,85],[35,"1x03",1811,1924,113],[35,"3x16",1549,1773,224],[35,"1x13",1031,1072,41],[35,"1x21",2040,2217,177],[35,"1x21",2444,2496,52],[35,"1x05",1134,1206,72],[35,"1x07",1868,2017,149],[35,"1x13",1588,1679,91],[35,"1x10",1960,2109,149],[35,"1x10",2184,2235,51],[35,"1x10",2286,2309,23],[35,"1x05",1864,1924,60],[35,"1x13",2161,2303,142],[36,"1x23",62,131,69],[36,"1x23",903,996,93],[36,"1x24",1275,1404,129],[36,"1x25",605,669,64],[36,"1x05",2073,2092,19],[36,"2x20",2130,2183,53],[36,"1x06",2215,2350,135],[36,"2x20",2184,2263,79],[36,"2x21",2275,2370,95],[36,"1x23",635,807,172],[36,"1x23",1224,1359,135],[36,"1x23",1960,2042,82],[36,"1x24",1760,1882,122],[36,"2x19",2190,2215,25],[36,"3x14",472,557,85],[36,"1x23",2114,2175,61],[36,"1x24",671,779,108],[36,"1x25",670,827,157],[36,"1x25",1163,1249,86],[36,"1x25",828,934,106],[36,"1x25",2287,2479,192],[36,"2x24",981,1083,102],[36,"3x01",29,106,77],[36,"2x24",1084,1213,129],[36,"1x01",1275,1332,57],[36,"1x02",1899,1959,60],[36,"1x02",68,117,49],[36,"1x01",1333,1349,16],[36,"1x02",125,157,32],[36,"1x01",1366,1393,27],[36,"1x02",158,208,50],[36,"1x02",1975,2001,26],[36,"1x02",215,242,27],[36,"1x01",1409,1426,17],[36,"1x02",2002,2056,54],[36,"2x24",1214,1278,64],[36,"3x01",107,203,96],[36,"4x06",1353,1384,31],[36,"3x01",232,278,46],[36,"3x16",2008,2029,21],[36,"2x07",0,210,210],[36,"1x01",0,222,222],[36,"1x04",0,50,50],[36,"1x04",2457,2487,30],[36,"1x01",223,450,227],[36,"3x14",615,670,55],[36,"1x01",451,545,94],[36,"3x16",2030,2191,161],[36,"2x07",211,434,223],[36,"1x01",546,696,150],[36,"2x07",435,491,56],[36,"1x01",697,1274,577],[36,"3x21",2101,2214,113],[37,"2x07",492,769,277],[37,"1x01",1427,null,1008],[37,"1x02",0,67,67],[37,"1x02",243,1898,1655],[37,"1x02",2057,null,266],[37,"1x03",39,436,397],[38,"2x07",770,810,40],[38,"1x03",544,1059,515],[38,"1x03",1166,1286,120],[38,"1x03",1377,1805,428],[38,"1x03",1925,1943,18],[38,"1x03",1983,2216,233],[39,"1x03",2217,null,286],[39,"1x04",51,304,253],[40,"2x07",811,842,31],[40,"1x04",305,547,242],[40,"1x04",592,1185,593],[40,"1x04",1307,1588,281],[40,"1x04",1697,2350,653],[40,"1x04",2496,null,30],[41,"1x05",35,640,605],[41,"1x05",755,870,115],[41,"1x05",974,1132,158],[41,"1x05",1207,1807,600],[41,"1x05",1925,2066,141],[41,"1x05",2143,2245,102],[41,"3x14",748,833,85],[41,"1x05",2246,null,199],[42,"2x07",843,925,82],[42,"1x06",96,189,93],[42,"1x06",296,615,319],[42,"1x06",722,930,208],[42,"1x06",1001,1197,196],[42,"1x06",1297,1745,448],[42,"1x06",1869,2204,335],[42,"1x06",2351,null,116],[43,"1x07",0,155,155],[43,"1x07",280,600,320],[43,"1x07",674,915,241],[43,"1x07",1010,1539,529],[43,"1x07",1693,1865,172],[43,"1x07",2017,null,478],[44,"1x08",23,87,64],[44,"1x08",175,480,305],[44,"1x08",552,962,410],[45,"1x08",1043,1528,485],[45,"1x08",1679,1996,317],[45,"1x08",2077,null,416],[46,"2x07",926,977,51],[46,"1x09",0,363,363],[46,"2x07",978,1201,223],[47,"1x09",364,436,72],[47,"1x09",553,794,241],[47,"1x09",955,1567,612],[47,"1x09",1640,1795,155],[47,"1x09",1892,2018,126],[47,"1x09",2158,null,332],[48,"1x10",51,349,298],[48,"1x10",489,698,209],[48,"2x07",1202,1266,64],[48,"1x10",837,1011,174],[48,"1x10",1159,1165,6],[49,"1x10",1166,1461,295],[49,"1x10",1714,1958,244],[49,"1x10",2110,2182,72],[49,"1x10",2237,2285,48],[49,"1x10",2310,null,160],[49,"1x11",48,237,189],[49,"1x11",327,435,108],[49,"1x11",532,1100,568],[49,"1x11",1342,1792,450],[49,"1x11",1840,1867,27],[49,"1x11",1990,null,445],[49,"2x15",615,682,67],[50,"2x07",1267,1311,44],[51,"2x15",940,1122,182],[52,"2x07",1312,1455,143],[53,"1x12",0,643,643],[53,"1x12",720,799,79],[54,"1x12",800,1167,367],[54,"1x12",1263,1580,317],[54,"1x12",1639,1995,356],[54,"1x12",2106,2294,188],[54,"4x06",1832,1946,114],[54,"1x12",2355,null,139],[55,"2x07",1466,1679,213],[56,"2x07",1680,1728,48],[56,"1x13",85,167,82],[56,"1x13",231,647,416],[56,"3x14",918,1100,182],[56,"1x13",708,946,238],[56,"1x13",1075,1585,510],[56,"1x13",1680,2160,480],[56,"1x13",2304,null,193],[57,"2x15",1434,1580,146],[58,"2x07",1729,1757,28],[58,"1x14",29,121,92],[58,"1x14",201,377,176],[58,"1x14",521,584,63],[59,"2x07",1758,1908,150],[59,"1x14",585,775,190],[59,"2x07",1909,2228,319],[59,"1x14",839,1187,348],[59,"1x14",1365,1591,226],[59,"1x14",1689,1716,27],[59,"1x14",1882,1897,15],[59,"1x14",1983,2009,26],[59,"1x14",2151,2315,164],[59,"2x15",1840,1902,62],[59,"2x07",2229,2258,29],[59,"2x15",1984,2061,77],[59,"1x14",2319,null,177],[59,"1x15",39,146,107],[60,"1x15",147,392,245],[60,"1x15",498,827,329],[60,"1x15",892,1024,132],[61,"1x15",1200,1476,276],[61,"1x15",1598,1770,172],[61,"1x15",1822,2245,423],[61,"1x15",2351,null,49],[61,"1x16",164,267,103],[62,"1x16",268,371,103],[62,"1x16",553,797,244],[62,"1x16",882,1322,440],[63,"1x16",1323,1553,230],[63,"1x16",1984,2160,176],[63,"1x16",2262,null,234],[64,"1x17",0,18,18],[64,"1x17",130,257,127],[64,"1x17",388,830,442],[64,"1x17",973,1052,79],[65,"1x17",1053,1082,29],[65,"3x14",1196,1232,36],[65,"1x17",1083,1237,154],[65,"1x17",1551,2005,454],[65,"1x17",2169,2216,47],[65,"3x14",1233,1309,76],[65,"1x17",2217,2397,180],[66,"1x17",2398,null,86],[67,"1x18",28,155,127],[68,"1x18",239,338,99],[68,"1x18",422,611,189],[68,"1x18",765,790,25],[68,"1x18",895,1091,196],[68,"1x18",1285,1446,161],[68,"1x18",1687,null,801],[69,"1x19",100,276,176],[70,"1x19",277,314,37],[70,"1x19",443,640,197],[71,"1x19",641,663,22],[71,"1x19",891,1169,278],[71,"1x19",1242,1498,256],[71,"1x19",1543,1660,117],[71,"1x19",1693,2034,341],[71,"2x07",2259,2288,29],[71,"1x19",2035,2061,26],[71,"2x07",2289,2310,21],[71,"1x19",2076,2114,38],[71,"2x07",2311,2344,33],[71,"1x19",2115,2146,31],[71,"2x07",2345,2469,124],[71,"1x19",2147,2238,91],[71,"1x20",32,137,105],[71,"1x20",193,402,209],[71,"1x20",484,870,386],[71,"1x20",999,1337,338],[71,"2x24",1579,1730,151],[71,"1x19",2480,null,30],[71,"2x24",1749,1764,15],[71,"1x20",1338,1500,162],[71,"1x20",1664,1936,272],[71,"1x20",2063,2337,274],[72,"1x20",2338,null,158],[72,"1x21",89,156,67],[72,"1x21",288,649,361],[72,"1x21",843,1262,419],[72,"1x21",1401,1680,279],[72,"1x21",1779,2039,260],[72,"1x21",2218,2443,225],[72,"1x21",2497,null,30],[73,"1x22",153,391,238],[73,"1x22",483,967,484],[73,"1x22",1099,1347,248],[73,"1x22",1579,1777,198],[73,"1x22",2050,null,446],[74,"1x23",133,634,501],[74,"1x23",811,902,91],[74,"1x23",997,1223,226],[74,"1x23",1360,1959,599],[74,"1x23",2043,2113,70],[74,"1x23",2176,null,322],[74,"1x24",92,644,552],[74,"1x24",780,1274,494],[74,"1x24",1405,1759,354],[74,"1x24",1883,null,601],[74,"1x25",99,604,505],[74,"1x25",937,1162,225],[74,"1x25",1250,1334,84],[75,"1x25",1878,2195,317],[75,"2x01",1481,1719,238],[75,"2x02",135,304,169],[75,"2x02",411,768,357],[75,"2x02",887,1383,496],[75,"2x02",1530,1709,179],[75,"2x01",1720,1764,44],[75,"2x02",1710,1892,182],[75,"2x01",1765,1810,45],[75,"2x01",2045,2190,145],[75,"2x02",1893,2176,283],[75,"2x03",351,518,167],[75,"2x07",2470,2509,39],[75,"2x03",681,857,176],[75,"2x02",2358,2449,91],[75,"2x03",858,894,36],[75,"2x03",1009,1265,256],[75,"2x03",1405,1423,18],[75,"2x03",1546,1796,250],[75,"2x03",1944,2016,72],[75,"2x03",2098,null,389],[75,"2x07",2509,2556,47],[75,"2x02",2450,null,30],[75,"2x03",108,165,57],[75,"2x07",2586,2603,17],[75,"2x03",895,1008,113],[75,"2x03",1424,1544,120],[75,"2x03",2017,2097,80],[76,"2x04",50,362,312],[76,"2x04",469,869,400],[76,"2x04",996,1416,420],[76,"2x04",1516,1949,433],[76,"2x04",2067,2099,32],[76,"2x04",2136,2159,23],[76,"2x04",2168,2181,13],[76,"2x04",2208,2227,19],[76,"2x04",2243,null,243],[77,"2x05",58,102,44],[77,"2x05",278,617,339],[77,"2x05",729,1074,345],[77,"2x05",1204,1491,287],[77,"2x05",1669,1863,194],[77,"2x05",1953,2434,481],[77,"2x05",2481,null,30],[77,"2x06",87,534,447],[78,"2x06",661,960,299],[78,"2x06",1123,1523,400],[78,"4x06",2160,2336,176],[78,"2x06",1722,2181,459],[78,"2x06",2308,2463,155],[78,"2x07",2679,2702,23],[78,"2x06",2471,null,30],[78,"2x08",179,337,158],[78,"2x08",464,655,191],[78,"2x08",782,1219,437],[78,"2x08",1321,2036,715],[78,"2x08",2111,null,331],[79,"2x09",0,162,162],[79,"2x09",450,877,427],[79,"2x09",948,1389,441],[79,"2x09",1581,1937,356],[79,"2x09",2129,null,511],[79,"3x14",1372,1577,205],[80,"2x10",229,516,287],[80,"2x10",678,946,268],[80,"2x10",1127,1360,233],[80,"2x10",1511,1914,403],[80,"2x10",2053,2145,92],[80,"2x10",2172,null,316],[81,"2x22",64,185,121],[81,"2x11",220,505,285],[81,"2x11",734,1044,310],[81,"2x11",1181,1248,67],[81,"2x22",378,470,92],[81,"2x11",1264,1361,97],[81,"2x22",882,935,53],[81,"2x11",1518,1585,67],[81,"2x22",965,981,16],[81,"2x11",1601,1887,286],[81,"2x22",1002,1037,35],[81,"2x11",1894,2060,166],[81,"2x22",1066,1091,25],[82,"2x11",2061,2180,119],[82,"2x11",2405,null,80],[83,"2x12",61,399,338],[83,"2x12",552,614,62],[83,"2x22",1386,1574,188],[83,"2x12",616,795,179],[84,"2x12",796,953,157],[84,"2x12",1064,1452,388],[84,"2x12",1598,1928,330],[84,"2x12",2034,2195,161],[85,"2x12",2196,null,283],[86,"2x13",70,286,216],[86,"2x13",438,956,518],[86,"2x13",1057,1313,256],[86,"2x13",1428,1554,126],[86,"2x13",1688,1990,302],[86,"2x13",2136,2491,355],[86,"2x13",2590,null,30],[87,"2x14",260,435,175],[87,"2x14",535,847,312],[87,"2x14",1009,1370,361],[87,"2x14",1584,2389,805],[87,"2x14",2526,null,46],[88,"2x15",90,615,525],[88,"2x15",682,940,258],[88,"2x15",1122,1434,312],[88,"2x15",1587,1840,253],[88,"2x15",1902,1983,81],[88,"2x15",2062,null,590],[89,"2x16",198,460,262],[89,"2x16",604,1013,409],[89,"2x16",1130,1532,402],[89,"2x16",1649,1772,123],[90,"2x16",1773,2040,267],[90,"2x16",2132,null,356],[90,"2x17",170,512,342],[90,"2x17",622,795,173],[90,"2x17",976,1323,347],[90,"2x17",1524,1883,359],[90,"2x17",2135,null,352],[91,"2x18",0,430,430],[91,"2x18",605,1030,425],[91,"2x18",1181,1490,309],[91,"2x18",1885,2692,807],[91,"2x22",2018,2354,336],[92,"2x19",38,325,287],[92,"2x19",448,710,262],[92,"2x19",899,1153,254],[92,"2x19",1293,1743,450],[92,"2x19",1914,2124,210],[92,"2x19",2151,2188,37],[92,"2x19",2216,null,272],[92,"2x20",46,92,46],[93,"2x20",93,109,16],[93,"2x20",240,366,126],[93,"2x20",549,819,270],[93,"2x20",970,1210,240],[93,"2x20",1359,2129,770],[93,"2x20",2264,null,225],[93,"2x21",82,509,427],[93,"2x21",669,847,178],[93,"2x21",943,1050,107],[94,"2x21",1051,1398,347],[94,"2x21",1531,2274,743],[94,"2x21",2371,null,283],[94,"2x22",217,372,155],[94,"2x22",473,878,405],[94,"2x22",1094,1381,287],[94,"2x22",1578,2014,436],[94,"2x22",2355,null,250],[94,"2x23",76,315,239],[94,"2x23",513,595,82],[95,"2x23",596,817,221],[95,"2x23",1024,1328,304],[95,"2x23",1488,1713,225],[96,"2x23",1714,1867,153],[96,"2x23",2140,null,350],[96,"2x24",71,160,89],[96,"2x24",326,444,118],[96,"2x24",570,980,410],[96,"2x24",1279,1578,299],[96,"2x24",1765,2035,270],[96,"3x08",686,765,79],[96,"2x24",2036,null,424],[97,"3x01",326,640,314],[97,"3x08",838,917,79],[97,"3x08",955,966,11],[97,"3x08",1120,1238,118],[97,"3x01",761,1060,299],[97,"3x01",1170,1518,348],[97,"3x08",1239,1421,182],[97,"3x08",1517,1670,153],[97,"3x01",1519,1634,115],[97,"3x01",1797,1948,151],[97,"3x08",1671,1873,202],[97,"3x01",1949,2322,373],[97,"3x01",2439,null,50],[97,"3x08",2121,2317,196],[97,"3x03",98,366,268],[97,"3x03",547,976,429],[97,"3x03",1127,1378,251],[97,"3x03",1504,1716,212],[97,"3x03",1817,2040,223],[97,"3x03",2198,null,222],[98,"3x02",116,507,391],[98,"3x02",625,733,108],[98,"3x02",854,1150,296],[98,"3x02",1293,1604,311],[98,"3x02",1759,1969,210],[98,"3x02",2050,null,439],[99,"3x04",33,453,420],[99,"3x04",616,1148,532],[99,"4x08",589,718,129],[99,"3x04",1262,1599,337],[99,"3x04",1679,2094,415],[100,"3x04",2095,2116,21],[100,"3x04",2258,null,232],[100,"4x08",719,841,122],[100,"3x05",159,586,427],[101,"3x05",587,668,81],[101,"3x05",802,981,179],[101,"3x05",1115,1425,310],[101,"3x05",1504,1691,187],[101,"3x05",1802,1864,62],[101,"3x05",1880,2104,224],[101,"3x05",2193,null,297],[101,"3x06",113,284,171],[101,"3x06",386,705,319],[101,"3x06",855,1065,210],[101,"3x06",1210,1563,353],[101,"3x06",1643,1912,269],[102,"3x08",58,316,258],[102,"3x06",1913,1922,9],[102,"3x06",2085,2486,401],[102,"3x07",214,330,116],[102,"3x07",495,790,295],[102,"3x07",923,1175,252],[102,"3x07",1313,1601,288],[102,"3x07",1753,2193,440],[102,"3x07",2245,2345,100],[102,"3x07",2493,null,30],[102,"3x09",31,227,196],[102,"3x08",317,389,72],[102,"3x09",380,601,221],[102,"3x08",390,632,242],[102,"3x08",2350,null,135],[102,"3x09",602,726,124],[102,"3x09",837,1042,205],[103,"3x09",1164,1699,535],[103,"3x09",1936,2011,75],[103,"3x09",2136,null,350],[103,"4x08",842,980,138],[103,"4x02",50,135,85],[104,"4x02",136,183,47],[104,"5x14",1031,1258,227],[104,"4x02",794,1035,241],[104,"4x02",1808,1931,123],[105,"3x10",177,417,240],[105,"5x13",901,1058,157],[105,"3x10",576,875,299],[105,"5x13",1335,1482,147],[105,"3x10",960,1230,270],[105,"4x02",1361,1479,118],[105,"3x10",1383,1557,174],[105,"4x08",981,1459,478],[105,"3x10",1743,1948,205],[105,"3x10",2068,null,415],[106,"5x14",1654,1806,152],[106,"5x13",1854,1988,134],[107,"5x13",2260,2333,73],[107,"4x02",2153,2225,72],[107,"3x11",50,460,410],[107,"3x11",554,882,328],[107,"3x11",966,1279,313],[107,"4x08",1460,1674,214],[107,"3x11",1444,1479,35],[107,"3x11",1592,2160,568],[107,"3x11",2433,null,45],[108,"4x08",1675,1820,145],[108,"3x12",99,431,332],[108,"3x12",524,877,353],[108,"3x12",1019,1412,393],[108,"4x08",1821,2083,262],[108,"3x12",1535,1725,190],[108,"3x12",1959,2147,188],[108,"4x08",2084,2302,218],[108,"3x12",2340,null,139],[108,"3x13",133,302,169],[108,"3x13",449,815,366],[109,"3x13",940,1353,413],[109,"3x13",1422,2085,663],[109,"3x13",2293,null,193],[109,"3x19",104,185,81],[109,"3x15",73,125,52],[109,"3x16",2418,2444,26],[109,"3x16",2463,2473,10],[109,"3x16",2496,2526,30],[109,"3x14",1932,2065,133],[109,"3x14",2203,2414,211],[109,"3x14",0,29,29],[109,"3x14",188,212,24],[109,"3x14",2446,2450,4],[109,"3x14",216,246,30],[109,"3x14",418,471,53],[109,"3x14",671,747,76],[109,"3x14",871,917,46],[109,"3x14",1102,1195,93],[109,"3x14",1310,1371,61],[109,"3x14",1578,1734,156],[109,"3x14",1821,1931,110],[109,"3x14",2066,2202,136],[109,"3x14",2451,null,30],[109,"3x15",264,549,285],[109,"3x15",669,961,292],[109,"3x15",1147,1555,408],[110,"3x15",1556,1640,84],[110,"3x15",1802,2377,575],[110,"3x15",2456,null,30],[110,"3x16",38,187,149],[110,"3x16",316,389,73],[111,"3x16",390,501,111],[111,"3x16",796,1042,246],[111,"3x16",1248,1548,300],[112,"3x16",1774,1915,141],[112,"3x16",2192,2415,223],[112,"3x16",2445,2462,17],[112,"3x16",2474,2495,21],[112,"3x16",2527,null,30],[112,"3x17",71,255,184],[112,"3x17",358,825,467],[112,"3x17",904,1360,456],[113,"3x17",1518,1882,364],[113,"3x17",2028,2256,228],[113,"3x17",2332,2341,9],[113,"3x17",2386,2391,5],[113,"3x17",2413,2420,7],[113,"3x17",2446,null,30],[113,"3x18",38,140,102],[113,"3x18",274,380,106],[113,"3x18",485,881,396],[113,"3x18",1066,1199,133],[113,"3x18",1372,1453,81],[114,"3x18",1454,1957,503],[114,"3x18",2105,2210,105],[114,"3x18",2273,null,211],[114,"3x19",426,599,173],[114,"3x19",1099,1320,221],[115,"3x19",1568,1691,123],[116,"3x19",1934,2024,90],[117,"3x19",60,99,39],[117,"3x19",186,425,239],[117,"3x19",600,1098,498],[117,"3x19",1321,1567,246],[117,"3x19",1692,1933,241],[117,"3x19",2025,null,462],[117,"3x20",186,405,219],[117,"3x20",575,779,204],[117,"3x20",931,1035,104],[117,"3x20",1223,1402,179],[117,"3x20",1636,1978,342],[118,"3x20",1979,2047,68],[118,"3x20",2413,null,71],[118,"3x21",1057,1203,146],[118,"3x21",44,263,219],[118,"3x21",332,631,299],[118,"3x21",704,1056,352],[118,"3x21",1224,1322,98],[118,"3x21",1458,1625,167],[118,"3x21",1719,2100,381],[118,"3x21",2215,null,271],[118,"3x22",309,459,150],[118,"3x22",521,947,426],[118,"3x22",1090,1233,143],[119,"3x22",1425,1701,276],[119,"3x22",1855,2201,346],[119,"3x23",206,459,253],[119,"3x23",521,1233,712],[119,"3x23",1425,2201,776],[119,"4x01",379,914,535],[119,"4x01",1055,1707,652],[119,"4x01",1875,2270,395],[120,"4x01",2443,2500,57],[120,"4x02",184,203,19],[120,"4x01",2504,2519,15],[120,"4x02",204,793,589],[120,"4x02",1036,1360,324],[120,"4x02",1480,1807,327],[120,"4x02",1932,2151,219],[120,"4x02",2226,null,257],[120,"4x03",60,189,129],[120,"4x03",562,940,378],[120,"4x03",1065,1854,789],[120,"4x03",2164,2416,252],[121,"4x04",0,253,253],[121,"4x04",368,639,271],[121,"4x04",726,836,110],[121,"4x04",1056,1577,521],[121,"4x04",1741,1948,207],[122,"4x04",1949,2164,215],[122,"4x05",0,814,814],[122,"4x05",886,2120,1234],[122,"4x05",2185,2321,136],[122,"4x05",2344,null,138],[122,"4x06",206,422,216],[122,"4x06",610,656,46],[123,"4x06",657,822,165],[123,"4x06",1008,1225,217],[123,"4x06",1385,1831,446],[123,"4x06",1949,2159,210],[123,"4x06",2337,null,138],[123,"4x07",71,301,230],[124,"4x07",474,862,388],[124,"4x07",1049,1773,724],[124,"4x07",1872,2189,317],[124,"4x08",88,512,424],[125,"4x08",513,588,75],[125,"4x08",2303,null,177],[125,"4x09",57,372,315],[125,"4x09",513,710,197],[125,"4x09",803,983,180],[125,"4x09",1196,1554,358],[125,"4x09",1737,2242,505],[126,"4x10",0,105,105],[126,"4x10",391,876,485],[126,"4x10",1099,1374,275],[126,"4x10",1532,1753,221],[126,"4x10",2030,2061,31],[126,"4x11",146,378,232],[127,"4x10",2062,2202,140],[127,"4x10",2446,null,35],[127,"4x11",379,564,185],[127,"4x11",662,748,86],[127,"4x11",994,1357,363],[127,"4x11",1478,1712,234],[127,"4x11",1888,null,594],[127,"4x12",328,469,141],[128,"4x12",470,669,199],[128,"4x12",957,1264,307],[128,"4x12",1633,1982,349],[128,"4x12",2239,null,241],[128,"4x13",247,827,580],[128,"4x13",978,null,1435],[128,"4x14",193,587,394],[128,"4x14",703,1551,848],[129,"4x14",1706,2053,347],[130,"5x01",549,731,182],[130,"5x01",884,1028,144],[130,"5x01",1221,1260,39],[130,"5x01",1619,2358,739],[130,"5x04",71,226,155],[131,"5x02",4,165,161],[131,"5x02",312,459,147],[132,"5x02",1098,1335,237],[132,"5x02",1935,2021,86],[132,"5x02",2290,2362,72],[132,"5x03",300,456,156],[132,"5x03",559,728,169],[132,"5x03",1040,1085,45],[132,"5x03",1189,1328,139],[132,"5x03",1474,1526,52],[132,"5x03",1627,1696,69],[132,"5x03",2474,null,30],[132,"5x04",352,462,110],[132,"5x04",572,728,156],[132,"5x04",1011,1253,242],[133,"5x04",1345,1707,362],[133,"5x04",2056,2200,144],[134,"5x05",937,1086,149],[134,"5x05",1188,1335,147],[135,"5x05",1439,1637,198],[135,"4x14",2058,2166,108],[135,"5x05",1638,1949,311],[135,"5x08",68,127,59],[135,"5x05",1980,2347,367],[135,"5x08",151,252,101],[135,"4x14",2167,2259,92],[135,"5x08",560,770,210],[135,"5x08",1465,1550,85],[135,"5x08",2040,2138,98],[136,"4x12",42,327,285],[136,"4x12",670,956,286],[137,"5x11",290,548,258],[138,"4x12",1265,1397,132],[139,"4x12",1397,1632,235],[140,"4x12",1983,2238,255],[140,"4x07",302,367,65],[140,"4x07",863,952,89],[140,"4x07",1774,1871,97],[140,"4x07",2288,null,172],[141,"5x16",1312,1343,31],[141,"4x09",372,512,140],[141,"4x09",711,802,91],[141,"4x09",984,1194,210],[141,"4x09",1555,1736,181],[141,"4x09",2243,null,217],[142,"5x03",37,186,149],[143,"4x01",53,378,325],[143,"4x01",915,1054,139],[143,"4x01",1708,1874,166],[143,"4x01",2271,2442,171],[143,"4x03",190,561,371],[143,"4x03",941,1064,123],[143,"4x03",1855,2163,308],[143,"4x03",2417,null,60],[144,"4x04",254,368,114],[144,"4x04",640,725,85],[144,"4x04",837,1055,218],[144,"4x04",1578,1740,162],[144,"4x04",2165,null,312],[144,"5x10",307,450,143],[144,"4x10",106,389,283],[144,"4x10",877,1098,221],[144,"4x10",1376,1531,155],[144,"4x10",1754,2029,275],[144,"4x10",2203,2445,242],[144,"5x16",1927,2010,83],[144,"6x09",75,92,17],[144,"6x09",122,136,14],[144,"5x07",390,2010,1620],[144,"5x01",2459,null,30],[144,"5x03",187,299,112],[144,"5x03",456,558,102],[144,"5x03",786,1039,253],[144,"5x03",1329,1473,144],[144,"5x03",1968,2145,177],[144,"5x03",2238,2379,141],[145,"5x07",2011,2578,567],[146,"5x10",970,1099,129],[146,"4x14",588,702,114],[147,"3x22",71,308,237],[147,"3x22",948,1089,141],[147,"3x22",1702,1854,152],[147,"3x22",40,71,31],[147,"3x22",460,520,60],[147,"3x22",1234,1424,190],[147,"5x01",1261,1388,127],[147,"4x13",828,977,149],[147,"4x14",36,192,156],[147,"3x22",2202,null,278],[147,"4x13",123,246,123],[147,"4x14",2261,null,221],[147,"5x01",317,497,180],[147,"5x01",1389,1618,229],[147,"4x14",1552,1705,153],[148,"5x01",732,883,151],[148,"5x02",165,312,147],[148,"5x02",460,1097,637],[148,"5x02",1336,1934,598],[148,"5x02",2022,2289,267],[148,"5x02",2363,null,64],[149,"5x04",231,352,121],[149,"5x04",463,571,108],[149,"5x04",729,1010,281],[149,"5x04",1254,1344,90],[149,"5x04",1708,2055,347],[149,"5x04",2261,2380,119],[149,"5x05",52,185,133],[149,"5x05",1087,1187,100],[149,"5x11",1452,1569,117],[149,"5x05",1336,1438,102],[149,"5x05",2348,null,133],[149,"5x06",260,1020,760],[150,"5x10",1342,1488,146],[150,"5x10",1886,1968,82],[150,"5x17",876,1075,199],[150,"5x11",1646,1768,122],[150,"5x06",1021,1208,187],[150,"5x11",2069,2336,267],[150,"5x06",1209,1355,146],[151,"5x12",1734,1786,52],[151,"5x12",1956,2056,100],[151,"5x06",1356,1828,472],[151,"5x10",2241,2287,46],[151,"5x06",1828,1913,85],[151,"5x10",2288,2343,55],[151,"5x14",31,57,26],[151,"5x06",1948,2340,392],[151,"5x14",58,110,52],[151,"5x14",2201,2364,163],[152,"5x09",0,125,125],[152,"5x08",257,260,3],[152,"5x09",126,302,176],[152,"5x09",788,955,167],[152,"5x09",1407,1578,171],[152,"5x09",1895,2087,192],[152,"5x07",61,247,186],[153,"5x06",38,218,180],[153,"5x06",2460,null,30],[153,"5x07",248,372,124],[153,"5x09",318,555,237],[153,"5x09",1035,1127,92],[153,"5x09",1232,1276,44],[153,"5x07",2579,null,91],[154,"5x11",2505,null,30],[154,"5x12",207,417,210],[154,"5x10",778,851,73],[154,"5x12",539,947,408],[154,"5x12",1065,1442,377],[154,"5x12",1556,1733,177],[155,"5x11",725,803,78],[155,"5x12",1787,1955,168],[155,"5x12",2057,null,422],[155,"5x11",850,958,108],[155,"5x11",990,1010,20],[155,"5x11",1143,1259,116],[155,"5x11",1640,1645,5],[155,"5x11",1835,2068,233],[155,"5x13",1483,1529,46],[155,"5x13",1680,1853,173],[155,"5x15",213,490,277],[155,"5x15",1210,1501,291],[155,"5x13",1989,2147,158],[155,"5x13",2334,2437,103],[155,"5x15",2040,2198,158],[156,"5x13",2550,null,30],[156,"5x14",132,212,80],[156,"5x14",348,365,17],[156,"5x14",454,586,132],[156,"5x15",2445,null,34],[156,"5x16",565,816,251],[156,"5x14",2018,2200,182],[156,"5x14",2365,2384,19],[156,"5x15",59,98,39],[156,"5x15",102,140,38],[156,"5x15",208,212,4],[156,"5x16",1184,1248,64],[156,"5x15",491,587,96],[156,"5x15",700,779,79],[156,"5x15",1660,1893,233],[156,"5x16",1850,1926,76],[156,"5x16",2011,2123,112],[156,"5x15",2356,2390,34],[156,"5x16",2124,2489,365],[156,"5x16",980,1005,25],[156,"5x16",1645,1712,67],[156,"5x16",1750,1849,99],[156,"5x16",2646,null,30],[156,"5x17",248,531,283],[156,"5x17",586,681,95],[156,"5x17",760,840,80],[156,"5x17",1076,1082,6],[156,"5x17",1192,1247,55],[156,"5x17",1504,1600,96],[156,"5x17",2427,2430,3],[156,"5x17",2546,null,30],[157,"5x17",1313,1503,190],[157,"5x17",1992,2426,434],[157,"6x01",437,693,256],[157,"6x01",822,1008,186],[157,"6x01",1135,1544,409],[157,"6x01",1682,2260,578],[157,"6x02",88,424,336],[157,"6x02",629,805,176],[157,"6x02",872,1084,212],[157,"6x02",1183,1528,345],[157,"6x02",1673,2120,447],[157,"6x02",2301,null,111],[157,"6x03",38,142,104],[157,"6x03",259,490,231],[157,"6x03",621,828,207],[157,"6x03",913,1402,489],[157,"6x03",1538,1681,143],[157,"6x03",1847,2193,346],[157,"6x03",2328,2465,137],[158,"6x03",2466,null,30],[158,"6x04",255,342,87],[158,"6x05",184,315,131],[158,"6x04",443,885,442],[158,"6x05",420,980,560],[158,"6x04",1021,1245,224],[158,"6x05",1102,1381,279],[158,"6x04",1393,1670,277],[158,"6x05",1563,1842,279],[158,"6x04",1950,2188,238],[158,"6x05",1974,2197,223],[158,"6x04",2275,null,203],[158,"6x05",2357,null,177],[158,"6x06",221,475,254],[158,"6x06",592,846,254],[158,"6x06",952,1264,312],[158,"6x06",1381,1626,245],[158,"6x06",1911,null,508],[158,"6x07",35,101,66],[158,"6x07",257,393,136],[159,"6x07",394,469,75],[159,"6x07",634,919,285],[159,"6x07",1072,1282,210],[159,"6x07",1409,1900,491],[159,"6x07",2057,2231,174],[159,"6x07",2356,null,123],[159,"6x08",0,70,70],[159,"6x08",271,440,169],[159,"6x08",544,721,177],[159,"6x08",958,1242,284],[159,"6x08",1343,1814,471],[159,"6x08",1937,2294,357],[159,"6x08",2447,null,32],[159,"6x09",93,121,28],[159,"6x09",137,362,225],[159,"6x10",55,152,97],[159,"6x10",253,373,120],[160,"6x09",2386,2717,331],[160,"6x10",374,520,146],[160,"6x10",642,755,113],[160,"6x10",873,1241,368],[160,"6x10",1431,1680,249],[160,"6x10",1869,2024,155],[160,"6x10",2222,null,258],[160,"6x11",0,508,508],[160,"6x11",2246,2384,138],[161,"6x12",194,373,179],[161,"6x12",543,819,276],[161,"6x12",956,1225,269],[161,"6x12",1509,1950,441],[161,"6x12",2106,2413,307],[161,"6x13",61,260,199],[161,"6x13",341,468,127],[162,"6x13",469,530,61],[162,"6x13",692,824,132],[162,"6x13",1021,1288,267],[162,"6x13",1378,1787,409],[162,"6x13",1943,2151,208],[162,"6x13",2315,null,164],[162,"6x14",133,266,133],[162,"6x14",386,502,116],[163,"6x14",503,741,238],[163,"6x14",861,1114,253],[163,"6x14",1304,2223,919],[163,"6x14",2426,null,54],[164,"6x16",176,343,167],[164,"6x16",413,708,295],[164,"6x16",883,1246,363],[164,"6x16",1401,1715,314],[164,"6x16",1858,2234,376],[164,"6x16",2444,null,35],[165,"6x17",0,null,2479,1],[165,"6x18",0,null,2868,1],[167,"6x01",42,406,364],[167,"6x01",694,821,127],[167,"6x01",1009,1134,125],[167,"6x01",1545,1681,136],[167,"6x01",2261,null,219],[167,"6x02",806,871,65],[167,"6x02",1085,1182,97],[167,"6x02",424,628,204],[167,"6x11",509,692,183],[167,"6x02",2121,2300,179],[167,"6x02",1529,1672,143],[167,"6x03",161,258,97],[167,"6x11",693,823,130],[167,"6x04",57,254,197],[167,"6x03",491,620,129],[167,"6x11",824,1133,309],[167,"6x03",829,912,83],[167,"6x11",1134,1310,176],[167,"6x03",1403,1537,134],[167,"6x03",1682,1846,164],[167,"6x11",1311,1610,299],[167,"6x03",2194,2327,133],[167,"6x11",1611,2170,559],[167,"6x06",54,220,166],[167,"6x08",71,271,200],[167,"6x10",153,211,58],[167,"6x11",2171,2245,74],[167,"6x11",2385,null,84],[167,"6x10",212,252,40],[167,"6x10",521,641,120],[167,"6x06",476,591,115],[167,"6x06",847,951,104],[167,"6x04",342,442,100],[167,"6x08",441,543,102],[167,"6x04",886,1020,134],[167,"6x04",1246,1392,146],[167,"6x06",1265,1380,115],[167,"6x08",722,957,235],[167,"6x04",1671,1949,278],[167,"6x08",1243,1342,99],[167,"6x04",2189,2274,85],[167,"6x05",55,183,128],[167,"6x05",315,419,104],[167,"6x05",981,1101,120],[167,"6x05",1382,1562,180],[167,"6x05",1843,1973,130],[167,"6x05",2198,2356,158],[167,"6x08",1815,1936,121],[167,"6x07",102,256,154],[167,"6x07",470,633,163],[167,"6x07",920,1071,151],[167,"6x07",1283,1408,125],[167,"6x07",1901,2056,155],[167,"6x07",2232,2355,123],[167,"6x12",41,193,152],[167,"6x12",374,542,168],[167,"6x12",820,955,135],[167,"6x12",1226,1508,282],[167,"6x08",2295,2446,151],[167,"6x10",756,872,116],[167,"6x10",1242,1430,188],[167,"6x10",1681,1868,187],[167,"6x12",1951,2105,154],[167,"6x06",1627,1911,284],[167,"6x10",2072,2221,149],[167,"6x12",2414,null,37],[167,"6x13",261,340,79],[167,"6x13",531,691,160],[167,"6x13",825,1020,195],[167,"6x13",1289,1377,88],[167,"6x13",1788,1942,154],[167,"6x13",2152,2314,162],[167,"6x14",50,132,82],[167,"6x14",267,385,118],[167,"6x14",742,860,118],[167,"6x14",1115,1303,188],[167,"6x14",2224,2425,201],[167,"6x16",46,175,129],[167,"6x16",343,412,69],[167,"6x16",709,882,173],[167,"6x16",1247,1400,153],[167,"6x16",1716,1857,141],[167,"6x16",2235,2443,208]]};
+const PLAYLISTS = {1:'https://rutube.ru/plst/383932/',2:'https://rutube.ru/plst/384387/',3:'https://rutube.ru/plst/384779/',4:'https://rutube.ru/plst/385675/',5:'https://rutube.ru/plst/385685/',6:'https://rutube.ru/plst/385720/'};
+
+/* ================= eras ================= */
+const ERAS = [
+  {k:'ancient',  n:'Древность',            c:'#5a4a7a', lore:'Двое братьев, женщина, которая им не мать, и свет в сердце острова. Отсюда начинается всё.'},
+  {k:'blackrock',n:'«Чёрная скала»',        c:'#6b4b3a', lore:'Шторм выбрасывает невольничий корабль далеко вглубь острова. Среди выживших — Рикардо.'},
+  {k:'early',    n:'1954–1973',            c:'#4d5f3a', lore:'Остров до «Дхармы»: военные, водородная бомба и Другие, которыми руководит нестареющий человек.'},
+  {k:'dharma',   n:'«Дхарма», 1974–1977',   c:'#8a6a24', lore:'Расцвет Инициативы «Дхарма». Среди её сотрудников — люди из будущего, выдающие себя за новичков.'},
+  {k:'before',   n:'До рейса 815',          c:'#3b5866', lore:'Жизни будущих пассажиров — флешбэки, разложенные по годам.'},
+  {k:'pre2004',  n:'2004, перед вылетом',   c:'#356a7c', lore:'Последние месяцы и дни до посадки в Сиднее. Многие из них уже встречались, сами того не зная.'},
+  {k:'crash',    n:'Крушение',             c:'#a14b3c', lore:'22 сентября 2004 года. Рейс Oceanic 815 разламывается над островом.'},
+  {k:'island',   n:'Остров, дни 2–108',      c:'#3f7a4b', lore:'Сто восемь дней на острове. Под конец 2004-го остров начинает прыгать во времени.'},
+  {k:'off',      n:'Большая земля, 2005–2007',c:'#4a6b8a', lore:'Шестёрка Oceanic дома — и ложь, которую приходится поддерживать.'},
+  {k:'return',   n:'Возвращение',           c:'#7a5a8a', lore:'Последние недели: рейс Ajira 316 и путь назад.'},
+  {k:'finale',   n:'Финал',                c:'#9a7a3a', lore:'Последние часы на острове.'},
+  {k:'sideways', n:'Вне времени',           c:'#8a7a4a', lore:'Отдельная реальность шестого сезона собрана в самом конце, как эпилог.'},
+];
+const ERA = Object.fromEntries(ERAS.map((e,i)=>[e.k,{...e,i}]));
+
+/* ================= build playback items ================= */
+const V = DATA.videos, H = DATA.headings;
+const HK = Object.fromEntries(H.map((h,i)=>[h.key,i]));
+const S = loadState();
+function loadState(){
+  let s={};
+  try{ s = JSON.parse(localStorage.getItem('lostchrono.v2')||'{}') }catch(e){}
+  return Object.assign({idx:0,pos:0,anchors:{},ids:{},skip:{},endSplit:null,swan:108*60,eps:0,maxJump:null,started:false,watchedMax:0}, s);
+}
+function save(){ try{ localStorage.setItem('lostchrono.v2', JSON.stringify(S)) }catch(e){} }
+
+function vidCode(c){ return c; }
+function vid(code){ const v=V[code]; return {code, id: S.ids[code] || v.id, dur: v.dur, title: v.title}; }
+// Rutube copies are PAL (25 fps): they run 25025/24000 faster than the source the timecodes were taken from
+const PAL = 25025/24000;
+
+let ITEMS = [];
+function buildItems(){
+  ITEMS = [];
+  for (const [h,c,s,e,d,native] of DATA.segments){
+    ITEMS.push({h, v:c, s, e, native: !!native});
+  }
+  for (const it of ITEMS){
+    const vd = V[it.v].dur || 2480;
+    const a = baseT(it, it.s), b = it.e == null ? vd : Math.min(vd, baseT(it, it.e));
+    it.d = Math.max(1, b - a);
+  }
+  let acc = 0; for (const it of ITEMS){ it.at = acc; acc += it.d; }
+  TOTAL = acc;
+}
+let TOTAL = 0;
+buildItems();
+
+/* anchors: per rutube video code: [[srcTime, offset], ...] */
+function offsetAt(code, t){
+  const a = (S.anchors[code]||[]).slice().sort((x,y)=>x[0]-y[0]);
+  if (!a.length) return 0;
+  let o = a[0][1];
+  for (const [st,off] of a){ if (st <= t + 0.5) o = off; }
+  return o;
+}
+function baseT(it, srcT){ return it.native ? srcT : srcT / PAL; }
+function rtTime(it, srcT){ return baseT(it, srcT) + offsetAt(it.v, srcT) + (S.gOff||0); }
+function rtStart(it){ return Math.max(0, rtTime(it, it.s)); }
+function rtEnd(it){
+  const vd = V[it.v].dur;
+  if (it.e == null) return vd ? vd - 0.6 : Infinity;
+  const e = rtTime(it, it.e);
+  return vd ? Math.min(e, vd - 0.6) : e;
+}
+function beyondVideo(it){ const vd = V[it.v].dur; return vd && rtStart(it) >= vd - 2; }
+
+/* ================= Rutube player bridge ================= */
+const iframe = document.getElementById('player');
+let P = {vid:null, ready:false, t:0, at:0, playing:false, lastEvt:0, loadAt:0, seekAt:0, wantPlay:true};
+function send(type, data){ try{ iframe.contentWindow.postMessage(JSON.stringify({type, data: data||{}}), '*') }catch(e){} }
+function now(){ return performance.now(); }
+function curT(){ return P.playing ? P.t + (now()-P.at)/1000 : P.t; }
+
+window.addEventListener('message', e => {
+  if (!/(^|\.)rutube\.ru$/.test((e.origin||'').replace(/^https?:\/\//,''))) return;
+  let m = e.data; if (typeof m === 'string'){ try{ m = JSON.parse(m) }catch(_){ return } }
+  if (!m || !m.type) return;
+  const d = m.data || {};
+  P.lastEvt = now();
+  switch(m.type){
+    case 'player:ready': case 'player:init': case 'player:playOptionsLoaded':
+      if (!P.ready){ P.ready = true; onPlayerReady(); } break;
+    case 'player:changeState': {
+      const st = d.state || d.status;
+      const isPlay = d.isPlaying != null ? !!d.isPlaying : st === 'playing';
+      if (isPlay){ if(!P.ready){P.ready=true; onPlayerReady();} P.t = curT(); P.at = now(); P.playing = true; }
+      else if (['pause','paused','stopped','ended','completed'].includes(st)){ P.t = curT(); P.at = now(); P.playing = false; }
+      if (st === 'ended' || st === 'stopped' || st === 'completed') maybeVideoEnded();
+      updPlayBtn(); break; }
+    case 'player:currentTime': {
+      const t = d.time ?? d.currentTime;
+      if (typeof t === 'number'){ P.t = t; P.at = now(); }
+      if (typeof d.duration === 'number' && P.vid && d.duration > 60 && Math.abs((V[P.vid].dur||0) - d.duration) > 0.5){ V[P.vid].dur = d.duration; }
+      break; }
+    case 'player:playComplete': maybeVideoEnded(); break;
+  }
+});
+
+function loadVideo(code, startRt){
+  const v = vid(code);
+  P = {vid: code, ready:false, t:startRt, at:now(), playing:true, lastEvt:P.lastEvt, loadAt:now(), seekAt:now(), wantPlay:true, pendingSeek:startRt};
+  iframe.src = `https://rutube.ru/play/embed/${v.id}/?t=${Math.floor(startRt)}&autoplay=true&autoStart=true`;
+  S.eps++;
+}
+function onPlayerReady(){
+  if (P.pendingSeek != null){
+    const t = P.pendingSeek; P.pendingSeek = null;
+    send('player:setCurrentTime', {time: t}); P.t = t; P.at = now(); P.seekAt = now();
+    send('player:play'); P.playing = true;
+  }
+}
+function seekTo(t){ send('player:setCurrentTime', {time: t}); P.t = t; P.at = now(); P.seekAt = now(); }
+function play(){ send('player:play'); P.t = curT(); P.at = now(); P.playing = true; updPlayBtn(); }
+function pause(){ send('player:pause'); P.t = curT(); P.at = now(); P.playing = false; updPlayBtn(); }
+
+/* ================= sequencing ================= */
+let idx = Math.min(S.idx||0, ITEMS.length-1);
+let started = false;
+
+function startItem(i, opts={}){
+  i = Math.max(0, Math.min(ITEMS.length-1, i));
+  // skip items without video
+  let guard = 0;
+  while (guard++ < ITEMS.length){
+    const it = ITEMS[i];
+    const v = vid(it.v);
+    if (S.skip[it.v] || beyondVideo(it)) { i++; if (i >= ITEMS.length) return finish(); continue; }
+    if (!v.id){ idx = i; S.idx = i; save(); renderAll(); showMissing(it.v); return; }
+    break;
+  }
+  const prevIt = ITEMS[idx];
+  if (S.idx_prev == null) S.idx_prev = idx;
+  idx = i; S.idx = i;
+  const it = ITEMS[i];
+  const from = opts.resumeAt != null ? opts.resumeAt : rtStart(it);
+  if (P.vid === it.v && P.ready && !opts.reload){
+    if (!opts.continuous) seekTo(from);
+    if (!P.playing) play();
+  } else {
+    loadVideo(it.v, from);
+  }
+  if (i === S.idx_prev + 1) noteJump(prevIt, it); else if (prevIt && prevIt.h !== it.h) { flashFx(); showHud(H[it.h]); }
+  S.idx_prev = i;
+  save(); renderAll(true);
+}
+function next(){ if (idx < ITEMS.length-1) startItem(idx+1); else finish(); }
+function prev(){
+  const it = ITEMS[idx];
+  if (curT() - rtStart(it) > 4) startItem(idx); else startItem(idx-1);
+}
+function finish(){ pause(); toast('Это конец. Вы посмотрели всё по порядку. Namaste.'); }
+
+function advance(){
+  const it = ITEMS[idx], nx = ITEMS[idx+1];
+  if (!nx) return finish();
+  // continuous: same video, next starts right where this ends
+  if (nx.v === it.v && !S.skip[nx.v] && Math.abs(rtStart(nx) - rtEnd(it)) < 1.6){
+    const prevIt = it; idx++; S.idx = idx; S.idx_prev = idx; noteJump(prevIt, nx); save(); renderAll(true); return;
+  }
+  startItem(idx+1);
+}
+function maybeVideoEnded(){
+  if (!started) return;
+  const it = ITEMS[idx];
+  if (now() - P.loadAt < 4000) return;
+  if (it && (it.e == null || rtEnd(it) >= (V[it.v].dur||Infinity) - 3)) advance();
+}
+
+let lastSave = 0;
+function tick(){
+  if (!started) return;
+  const it = ITEMS[idx]; if (!it) return;
+  const t = curT();
+  // player hasn't reported "ready" — assume it is after 6 s
+  if (!P.ready && P.pendingSeek != null && now() - P.loadAt > 6000){ P.ready = true; onPlayerReady(); }
+  const settled = now() - P.seekAt > 2500;
+  // drifted way before the fragment (seek ignored) → seek again
+  if (settled && P.ready && now() - P.lastEvt < 1500 && t < rtStart(it) - 6 && now() - P.seekAt > 5000){ seekTo(rtStart(it)); }
+  if (settled && t >= rtEnd(it) - 0.15) advance();
+  // segment progress
+  const a = rtStart(it), b = rtEnd(it);
+  const frac = isFinite(b) ? Math.min(1, Math.max(0, (t - a) / (b - a))) : 0;
+  document.getElementById('segfill').style.width = (frac*100).toFixed(2) + '%';
+  S.pos = Math.max(0, t - a);
+  const watched = it.at + Math.min(it.d, Math.max(0, S.pos));
+  setRun(watched);
+  if (now() - lastSave > 4000){ save(); lastSave = now(); }
+  // sync indicator
+  const live = now() - P.lastEvt < 3000;
+  document.getElementById('syncdot').classList.toggle('ok', live);
+  document.getElementById('syncTxt').textContent = live ? `плеер на связи · ${fmt(t)}` : (P.vid ? 'жду ответа плеера…' : 'плеер не подключён');
+  // swan
+  if (P.playing) swanTick();
+}
+setInterval(tick, 250);
+
+/* ================= jumps / stats ================= */
+function storyT(hi){ const h = H[hi]; return h.t == null ? 2008.5 : h.t; }
+function noteJump(a, b){
+  if (!a || !b || a.h === b.h) return;
+  const ha = H[a.h], hb = H[b.h];
+  const dt = Math.abs(storyT(b.h) - storyT(a.h));
+  if (ha.era !== hb.era || dt > 0.6){ flashFx(); showHud(hb); }
+  if (ha.t != null && hb.t != null && (!S.maxJump || dt > S.maxJump.dt)) S.maxJump = {dt, from: ha.label, to: hb.label};
+}
+function flashFx(){ const f = document.getElementById('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+  const w = document.getElementById('nowWhen'); w.classList.add('blur'); setTimeout(()=>w.classList.remove('blur'), 450); }
+let hudT;
+function showHud(h){ const hud = document.getElementById('hud'); document.getElementById('hudL').textContent = h.label; document.getElementById('hudS').textContent = h.sub || ERA[h.era].n;
+  hud.classList.add('show'); clearTimeout(hudT); hudT = setTimeout(()=>hud.classList.remove('show'), 4200); }
+
+/* ================= render ================= */
+const $ = id => document.getElementById(id);
+function fmt(s){ if(!isFinite(s)) return '—'; s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return h? `${h}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}` : `${m}:${String(x).padStart(2,'0')}`; }
+function hrs(s){ const h = s/3600; return h < 10 ? h.toFixed(1).replace('.', ',') + ' ч' : Math.round(h) + ' ч'; }
+function codeLabel(c){ const [a,b]=c.split('x'); return `${a}×${+b}`; }
+
+function renderAll(changed){
+  const it = ITEMS[idx]; if (!it) return;
+  const h = H[it.h], era = ERA[h.era];
+  $('nowWhen').textContent = h.label;
+  $('nowSub').textContent = h.sub || '';
+  $('nowEra').textContent = era.n;
+  $('nowLore').textContent = era.lore;
+  const v = V[it.v];
+  $('srcCode').textContent = codeLabel(it.v);
+  $('srcTitle').textContent = v.title;
+  const a = rtStart(it), b = rtEnd(it);
+  $('srcTc').textContent = `Rutube: ${it.v.split('x')[0]} сезон ${+it.v.split('x')[1]} серия · ${fmt(a)}–${isFinite(b)?fmt(b):'конец'}`;
+  const nx = ITEMS[idx+1];
+  $('srcNext').innerHTML = nx ? `Дальше: <b>${codeLabel(nx.v)}</b> · ${H[nx.h].label}` : 'Это последний фрагмент';
+  $('segInfo').textContent = `Фрагмент ${idx+1} из ${ITEMS.length} · ${fmt(it.d)}`;
+  $('stSeg').textContent = `${idx+1}/${ITEMS.length}`;
+  $('stEps').textContent = S.eps;
+  $('stJump').textContent = S.maxJump ? (S.maxJump.dt >= 1 ? Math.round(S.maxJump.dt) + ' лет' : Math.round(S.maxJump.dt*365) + ' дн.') : '—';
+  $('stJump').title = S.maxJump ? `${S.maxJump.from} → ${S.maxJump.to}` : '';
+  document.title = `${h.label} · ${codeLabel(it.v)} — по порядку`;
+  renderAxis(it.h);
+  renderChars(changed);
+  renderChapters();
+  renderOffset();
+  setRun(it.at + Math.min(it.d, S.pos||0));
+}
+
+/* --- story axis (non-linear) --- */
+const AX = [[30,0],[1867,6],[1954,11],[1973.6,17],[1978,30],[2003.9,46],[2004.70,52],[2004.73,55],[2005.03,79],[2007.0,85],[2007.97,95]];
+function axX(t){ if (t == null) return 99; if (t <= AX[0][0]) return AX[0][1];
+  for (let i=1;i<AX.length;i++){ const [t1,x1]=AX[i-1],[t2,x2]=AX[i]; if (t <= t2) return x1 + (x2-x1)*(t-t1)/(t2-t1); } return AX[AX.length-1][1]; }
+let axisBuilt = false, seenTs = new Set();
+function renderAxis(hi){
+  const ax = $('axis');
+  if (!axisBuilt){
+    const ticks = [[30,'I в.'],[1867,'1867'],[1954,'1954'],[1977,'1977'],[1988,'1988'],[1996,'1996'],[2001,'2001'],[2004.72,'крушение'],[2004.87,'день 60'],[2005.0,'день 101'],[2007,'2007'],[null,'∞']];
+    ax.innerHTML = `<div class="rail"></div>
+      <div class="zonebg dh" style="left:${axX(1974)}%;width:${axX(1978)-axX(1974)}%"></div>
+      <div class="zonebg" style="left:${axX(2004.72)}%;width:${axX(2005.03)-axX(2004.72)}%"></div>` +
+      ticks.map(([t,l])=>`<div class="tick${t>2004.7&&t<2005.1?' zone':''}" style="left:${axX(t)}%">${l}</div>`).join('') +
+      `<div id="ghosts"></div><div class="dot" id="adot"></div>`;
+    axisBuilt = true;
+  }
+  const t = H[hi].t;
+  const x = axX(t);
+  const dot = $('adot'); dot.style.left = x + '%'; dot.dataset.l = H[hi].label;
+  // trail of visited story moments
+  const key = Math.round(x*4);
+  if (!seenTs.has(key)){ seenTs.add(key); const g = document.createElement('div'); g.className='ghostdot'; g.style.left = x+'%'; $('ghosts').appendChild(g); }
+}
+function initGhosts(){ for (let i=0;i<=idx;i++){ const x = axX(H[ITEMS[i].h].t); const key=Math.round(x*4); if(!seenTs.has(key)){seenTs.add(key); const g=document.createElement('div'); g.className='ghostdot'; g.style.left=x+'%'; $('ghosts').appendChild(g);} } }
+
+/* --- runtime bar --- */
+let eraRuns = [];
+function buildRunbar(){
+  const tot = {}; const first = {};
+  ITEMS.forEach((it,i)=>{ const e = H[it.h].era; tot[e]=(tot[e]||0)+it.d; if(first[e]==null) first[e]=i; });
+  let acc = 0; eraRuns = [];
+  $('runbar').innerHTML = ERAS.filter(e=>tot[e.k]).map(e=>{ const w = tot[e.k]/TOTAL*100; eraRuns.push({k:e.k,from:acc,to:acc+tot[e.k]}); acc+=tot[e.k];
+    return `<div class="era" data-first="${first[e.k]}" style="width:${w}%;background:${e.c}" title="${e.n} · ${hrs(tot[e.k])}"><div class="fill" data-k="${e.k}"></div>${w>5?`<span>${e.n}</span>`:''}</div>`; }).join('') + `<div class="cursor" id="rcur"></div>`;
+  $('runbar').querySelectorAll('.era').forEach(el=>el.onclick=()=>{ startItem(+el.dataset.first); begin(); });
+}
+function setRun(w){
+  S.watchedMax = Math.max(S.watchedMax||0, w);
+  $('rcur').style.left = (w/TOTAL*100) + '%';
+  for (const r of eraRuns){ const f = $('runbar').querySelector(`.fill[data-k="${r.k}"]`); const p = Math.max(0, Math.min(1, (w - r.from)/(r.to - r.from))); f.style.width = (p*100)+'%'; }
+  $('stWatched').textContent = hrs(w); $('stLeft').textContent = hrs(TOTAL - w);
+  $('runLeft').textContent = `${(w/TOTAL*100).toFixed(1).replace('.',',')}% сериала`;
+  $('runRight').textContent = `всего ${hrs(TOTAL)}`;
+}
+
+/* --- chapters --- */
+let chapBuilt = false;
+function renderChapters(){
+  const pane = $('pane-chaps');
+  const firstOf = {}, durOf = {};
+  if (!chapBuilt){
+    ITEMS.forEach((it,i)=>{ if(firstOf[it.h]==null) firstOf[it.h]=i; durOf[it.h]=(durOf[it.h]||0)+it.d; });
+    let html = '', lastEra = null;
+    Object.keys(firstOf).map(Number).sort((a,b)=>firstOf[a]-firstOf[b]).forEach(hi=>{
+      const h = H[hi];
+      if (h.era !== lastEra){ html += `<div class="chap-era">${ERA[h.era].n}</div>`; lastEra = h.era; }
+      html += `<div class="chap" data-h="${hi}" data-i="${firstOf[hi]}"><div class="l">${h.label}${h.sub?`<small>${h.sub}</small>`:''}</div><div class="d">${fmt(durOf[hi])}</div></div>`;
+    });
+    pane.innerHTML = html;
+    pane.querySelectorAll('.chap').forEach(el=>el.onclick=()=>{ startItem(+el.dataset.i); begin(); });
+    chapBuilt = true;
+  }
+  const cur = ITEMS[idx].h;
+  let passed = true;
+  pane.querySelectorAll('.chap').forEach(el=>{
+    const hi = +el.dataset.h;
+    if (hi === cur){ passed = false; el.className = 'chap cur'; }
+    else el.className = 'chap' + (passed ? ' done' : '');
+  });
+  if (!pane.hidden){ const c = pane.querySelector('.chap.cur'); if (c && changedChap !== cur){ c.scrollIntoView({block:'center'}); changedChap = cur; } }
+}
+let changedChap = null;
+
+/* ================= characters ================= */
+// ev: [after-heading-key, status, note]   travel: list of heading keys   born: year (approx flag) or bornAt heading
+const TRAVEL_GROUP_7477 = ['p1:1974','p1:1975','p1:1976','p1:1977'];
+const JUMP_DAYS = ['p1:Day 103','p1:Day 104','p1:Day 105','p1:Day 106','p1:Day 107','p1:Day 108'];
+const CHARS = [
+ {n:'Джек Шепард', c:'#c9a26b', b:1969, ap:1, travel:['p1:1977'], ev:[['p2:The End','dead','Погиб в бамбуковой роще — там же, где очнулся после крушения']]},
+ {n:'Кейт Остин', f:1, c:'#b98aa0', b:1977, ap:1, travel:['p1:1977'], ev:[]},
+ {n:'Джеймс «Сойер» Форд', c:'#c4b25a', b:1968, ap:1, travel:['p1:1954',...TRAVEL_GROUP_7477,'p1:1988',...JUMP_DAYS], tnote:{'p1:1974':'Становится Джимом Лафлёром, начальником охраны «Дхармы»','p1:1977':'Джим Лафлёр, глава охраны «Дхармы»'}, ev:[]},
+ {n:'Джон Локк', c:'#9a8f78', bornAt:'p1:1956', travel:['p1:1954','p1:1988',...JUMP_DAYS], tnote:{'p1:1954':'Ещё не родился — но уже говорит с Ричардом'}, ev:[['p1:Day 108','alive','Повернул колесо и покинул остров'],['p2:Twenty Days Until the End','dead','Убит в номере отеля'],['p2:Nine Days Until the End','dead','Его облик занял Человек в чёрном']]},
+ {n:'Хьюго «Хёрли» Рейес', c:'#d2a24c', b:1977, ap:1, travel:['p1:1977'], ev:[['p2:The End','alive','Новый хранитель острова']]},
+ {n:'Саид Джарра', c:'#8f7a63', b:1967, ap:1, travel:['p1:1977'], tnote:{'p1:1977':'Сидит в камере «Дхармы» — и стреляет в юного Бена'}, ev:[['p2:Eight Days Until the End','alive','Умер в Храме и вернулся — но уже другим'],['p2:Two Days Until the End','dead','Унёс бомбу подальше от остальных на подлодке']]},
+ {n:'Сун Квон', f:1, c:'#c78f8f', b:1980, ap:1, ev:[['p2:Two Days Until the End','dead','Утонула вместе с Джином на подлодке']]},
+ {n:'Джин Квон', c:'#7f9bb3', b:1975, ap:1, travel:['p1:1954',...TRAVEL_GROUP_7477,'p1:1988',...JUMP_DAYS], tnote:{'p1:1988':'Встречает молодую Даниэль Руссо и её экспедицию'}, ev:[['p1:Day 100','alive','Пережил взрыв сухогруза — остался на острове'],['p2:Two Days Until the End','dead','Остался с Сун до конца']]},
+ {n:'Чарли Пейс', c:'#7fa37a', b:1976, ap:1, ev:[['p1:Day 91','dead','Утонул на станции «Зеркало», успев предупредить: это не лодка Пенни']]},
+ {n:'Клэр Литлтон', f:1, c:'#e0c27a', b:1982, ap:1, ev:[['p1:Day 98','lost','Ушла ночью в джунгли с Кристианом, оставив Аарона'],['p2:Eight Days Until the End','alive','Три года одна в джунглях — одичала']]},
+ {n:'Десмонд Хьюм', c:'#6fa0b8', b:1965, ap:1, ev:[], tnote:{}, hnote:{'p1:1996':'В эти годы его сознание дважды прыгает сюда из 2004-го'}},
+ {n:'Бенджамин Лайнус', c:'#a3a3c7', bornAt:'p1:1963', ev:[['p1:1977','alive','Ранен Саидом — спасён Ричардом, но «невинность» утрачена'],['p1:1992','alive','Устроил «Чистку» — «Дхармы» больше нет']]},
+ {n:'Джульет Бёрк', f:1, c:'#d6c08a', b:1971, ap:1, travel:['p1:1954',...TRAVEL_GROUP_7477,'p1:1988',...JUMP_DAYS], ev:[['p2:Eight Days Until the End','dead','Ударила по бомбе — и умерла уже в 2007-м']]},
+ {n:'Майлз Стром', c:'#9ab07a', bornAt:'p1:1977', travel:['p1:1954',...TRAVEL_GROUP_7477,'p1:1988',...JUMP_DAYS], tnote:{'p1:1977':'Рядом — он сам, младенец, сын Пьера Чана'}, ev:[]},
+ {n:'Дэниел Фарадей', c:'#8fb3c7', b:1972, ap:1, travel:['p1:1954','p1:1974','p1:1977','p1:1988',...JUMP_DAYS], ev:[['p1:1977','paradox','Застрелен в 1977-м собственной матерью. Но маленький Дэниел живёт дальше — и однажды прилетит сюда']]},
+ {n:'Шарлотта Льюис', f:1, c:'#c98f6f', b:1974, ap:1, travel:['p1:1954','p1:1988',...JUMP_DAYS], hnote:{'p1:1977':'Здесь она — девочка, живущая в «Дхарме»'}, ev:[['p1:Day 108','dead','Не пережила скачки во времени']]},
+ {n:'Ричард Альперт', c:'#8a6f5a', b:1840, ev:[['p1:1867','alive','Не стареет: дар Джейкоба'],['p2:Eight Days Until the End','alive','Джейкоб мёртв — дар больше не действует']]},
+ {n:'Джейкоб', c:'#e6e1cf', b:0, noside:1, ev:[['p2:Eight Days Until the End','ghost','Убит Беном у подножия статуи. Является кандидатам']]},
+ {n:'Человек в чёрном', c:'#3a3f40', b:0, noside:1, ev:[['p1:1st Century','smoke','Стал дымовым монстром'],['p2:Nine Days Until the End','smoke','Ходит в облике Джона Локка'],['p2:The End','dead','Убит Кейт на краю обрыва']]},
+ {n:'Майкл Доусон', c:'#9a7f6b', b:1966, ap:1, ev:[['p1:Day 67','alive','Уплыл с Уолтом с острова — пока что'],['p1:Day 100','dead','Погиб при взрыве сухогруза']]},
+ {n:'Бун Карлайл', c:'#b8a37a', b:1980, ap:1, ev:[['p1:Day 41','dead','Разбился в самолёте наркокурьеров на скале']]},
+ {n:'Шеннон Резерфорд', f:1, c:'#d1a7a0', b:1981, ap:1, ev:[['p1:Day 48','dead','Случайно застрелена Аной Люсией']]},
+ {n:'Мистер Эко', c:'#6b5a4a', b:1964, ap:1, ev:[['p1:Day 72','dead','Убит дымовым монстром']]},
+ {n:'Ана Люсия Кортес', f:1, c:'#b07a6a', b:1975, ap:1, ev:[['p1:Day 64','dead','Застрелена Майклом в бункере']]},
+ {n:'Даниэль Руссо', f:1, c:'#9a8a6a', b:1960, ap:1, ev:[['p1:1988','alive','Её экспедиция терпит крушение у острова'],['p1:Day 97','dead','Убита наёмниками с сухогруза']]},
+ {n:'Аарон Литлтон', c:'#e8d6a8', bornAt:'p1:Day 41', ev:[['p1:Day 108','alive','Растёт в Лос-Анджелесе как сын Кейт']]},
+ {n:'Чарльз Уидмор', c:'#7a8590', b:1937, ap:1, ev:[['p2:One Day Until the End','dead','Убит Человеком в чёрном']]},
+];
+const ST = {unborn:['не родился','не родилась'], alive:['жив','жива'], dead:['мёртв','мертва'], travel:['сквозь время','сквозь время'], smoke:['дым','дым'], ghost:['мёртв · является','мертва · является'], lost:['пропал','пропала'], side:['вне времени','вне времени'], paradox:['мёртв · и жив','мертва · и жива']};
+const STC = {unborn:'st-unborn',alive:'st-alive',dead:'st-dead',travel:'st-travel',smoke:'st-smoke',ghost:'st-ghost',lost:'st-lost',side:'st-side',paradox:'st-travel'};
+let prevStatus = {};
+function charStatus(ch, hi){
+  const h = H[hi], key = h.key;
+  let s = 'alive', note = '';
+  const t = h.t == null ? 2008.5 : h.t;
+  let unborn = false;
+  if (ch.bornAt != null) unborn = hi < HK[ch.bornAt];
+  else if (ch.b != null) unborn = t < ch.b;
+  if (unborn) s = 'unborn';
+  for (const [k, st, nt] of ch.ev){ if (HK[k] != null && hi > HK[k]) { s = st; note = nt; } }
+  if (ch.hnote && ch.hnote[key]) note = ch.hnote[key];
+  if (ch.travel && ch.travel.includes(key)){
+    s = 'travel';
+    note = (ch.tnote && ch.tnote[key]) || (JUMP_DAYS.includes(key) ? 'Остров швыряет их по времени' : 'Путешествует во времени');
+    if (unborn && !(ch.tnote && ch.tnote[key])) note += ch.f ? ' — сама ещё не родилась или младенец' : ' — сам ещё не родился или младенец';
+  }
+  if (h.era === 'sideways' && !ch.noside) { s = 'side'; note = 'Другая реальность: жизнь, в которой рейс 815 приземлился'; }
+  if (s === 'unborn' && !note) note = ch.ap ? `Родится ≈${ch.b}` : (ch.bornAt ? `Родится: ${H[HK[ch.bornAt]].label}` : (ch.b ? `Родится ≈${ch.b}` : ''));
+  return {s, note};
+}
+let lastCharIdx = -1;
+function renderChars(changed){
+  const hi = ITEMS[idx].h;
+  const natural = idx === lastCharIdx + 1; lastCharIdx = idx;
+  const box = $('chars');
+  if (!box.children.length){
+    setTimeout(initPhotos, 0);
+    box.innerHTML = CHARS.map((c,i)=>`<div class="ch" id="ch${i}"><div class="av" style="background:${c.c}">${c.n.replace(/[«»]/g,'').split(' ').filter(w=>w[0]===w[0].toUpperCase()).slice(0,2).map(w=>w[0]).join('')}</div><div><div class="nm"><span>${c.n}</span><span class="chip"></span></div><div class="nt"></div></div></div>`).join('');
+  }
+  CHARS.forEach((c,i)=>{
+    const {s, note} = charStatus(c, hi);
+    const el = $('ch'+i);
+    const chip = el.querySelector('.chip');
+    chip.className = 'chip ' + STC[s];
+    chip.textContent = ST[s][c.f?1:0];
+    el.querySelector('.nt').textContent = note;
+    el.classList.toggle('dim', s==='unborn'||s==='dead');
+    const sig = s + '|' + note;
+    if (changed && natural && prevStatus[i] && prevStatus[i] !== sig){ el.classList.add('changed'); setTimeout(()=>el.classList.remove('changed'), 6000);
+      if (natural && (s === 'dead' || s === 'ghost')) toast(`${c.n}: ${note || ST[s][c.f?1:0]}`); }
+    prevStatus[i] = sig;
+  });
+}
+
+/* ================= photos (user-provided) ================= */
+let photoFor = null;
+function photoKey(i){ return CHARS[i].n; }
+function applyPhoto(i){ const el = $('ch'+i); if (!el) return; const av = el.querySelector('.av'); const p = (S.photos||{})[photoKey(i)];
+  av.style.backgroundImage = p ? `url(${p})` : ''; av.classList.toggle('ph', !!p); }
+function setPhotoFromFile(i, file){
+  if (!file || !file.type.startsWith('image/')) return;
+  const img = new Image(); const url = URL.createObjectURL(file);
+  img.onload = () => { const n = 160, c = document.createElement('canvas'); c.width = c.height = n; const g = c.getContext('2d');
+    const m = Math.min(img.width, img.height); const sx = (img.width - m)/2, sy = Math.max(0, (img.height - m)/2 - img.height*0.08);
+    g.drawImage(img, sx, Math.max(0,sy), m, m, 0, 0, n, n); URL.revokeObjectURL(url);
+    S.photos = S.photos || {}; S.photos[photoKey(i)] = c.toDataURL('image/jpeg', 0.82); save(); applyPhoto(i); toast(`Фото для «${CHARS[i].n}» сохранено`); };
+  img.src = url;
+}
+function initPhotos(){
+  CHARS.forEach((c,i)=>{ const el = $('ch'+i); const av = el.querySelector('.av');
+    av.title = 'Нажмите, чтобы поставить фото';
+    av.onclick = () => { photoFor = i; $('photoIn').value = ''; $('photoIn').click(); };
+    av.oncontextmenu = e => { e.preventDefault(); if (S.photos && S.photos[photoKey(i)]){ delete S.photos[photoKey(i)]; save(); applyPhoto(i); toast('Фото убрано'); } };
+    el.ondragover = e => { e.preventDefault(); el.classList.add('drop'); };
+    el.ondragleave = () => el.classList.remove('drop');
+    el.ondrop = e => { e.preventDefault(); el.classList.remove('drop'); setPhotoFromFile(i, e.dataTransfer.files[0]); };
+    applyPhoto(i); });
+  $('photoIn').onchange = e => { if (photoFor != null) setPhotoFromFile(photoFor, e.target.files[0]); };
+}
+
+/* ================= offsets UI ================= */
+function renderOffset(){
+  const it = ITEMS[idx];
+  $('gOffVal').textContent = ((S.gOff||0)>0?'+':'') + (S.gOff||0) + ' с';
+  $('offCode').textContent = `${codeLabel(it.v)} «${V[it.v].title}»`;
+  const o = offsetAt(it.v, it.s);
+  $('offVal').textContent = (o>0?'+':'') + Math.round(o) + ' с';
+}
+function adjustOffset(delta){
+  const it = ITEMS[idx]; const a = S.anchors[it.v] = S.anchors[it.v] || [];
+  if (!a.length) a.push([0, 0]);
+  // shift every anchor of this video (whole-episode shift)
+  for (const x of a) x[1] += delta;
+  save(); renderOffset(); startItem(idx); toast(`Сдвиг серии ${codeLabel(it.v)}: ${Math.round(offsetAt(it.v, it.s))} с`);
+}
+function syncHere(){
+  const it = ITEMS[idx]; const t = curT();
+  const off = t - baseT(it, it.s) - (S.gOff||0);
+  const a = S.anchors[it.v] = S.anchors[it.v] || [];
+  const ex = a.find(x=>Math.abs(x[0]-it.s) < 1); if (ex) ex[1] = off; else a.push([it.s, off]);
+  if (a.length === 1 && it.s > 0) a.push([0, off]);
+  save(); renderOffset(); toast(`Готово: фрагмент начинается на ${fmt(t)}. Сдвиг ${Math.round(off)} с запомнен для этой серии.`);
+}
+
+/* ================= missing videos ================= */
+let missingCode = null;
+function showMissing(code){
+  missingCode = code; pause();
+  $('missCode').textContent = `${codeLabel(code)} «${V[code].title}»`;
+  $('missPl').href = PLAYLISTS[code.split('x')[0]];
+  $('missIn').value = '';
+  $('missOv').hidden = false;
+}
+function parseId(s){ const m = String(s).match(/([0-9a-f]{32})/i); return m ? m[1].toLowerCase() : null; }
+$('missSave').onclick = ()=>{ const id = parseId($('missIn').value); if (!id) return toast('Не вижу ссылку на видео Rutube'); S.ids[missingCode] = id; save(); $('missOv').hidden = true; renderVlist(); startItem(idx, {reload:true}); };
+$('missSkip').onclick = ()=>{ S.skip[missingCode] = true; save(); $('missOv').hidden = true; startItem(idx); };
+function renderVlist(){
+  const miss = Object.keys(V).filter(c=>!V[c].id);
+  $('vlist').innerHTML = miss.map(c=>`<span class="${S.ids[c]?'':'miss'}">${codeLabel(c)}</span><input type="text" data-c="${c}" placeholder="${V[c].title} — ссылка Rutube" value="${S.ids[c]?'https://rutube.ru/video/'+S.ids[c]+'/':''}">`).join('');
+  $('vlist').querySelectorAll('input').forEach(inp=>inp.onchange=()=>{ const id=parseId(inp.value); if(id){ S.ids[inp.dataset.c]=id; delete S.skip[inp.dataset.c]; save(); toast('Ссылка сохранена'); renderVlist(); } });
+}
+
+/* ================= swan timer ================= */
+let swanLast = now();
+function swanTick(){
+  const n = now(); const dt = (n - swanLast)/1000; swanLast = n;
+  if (dt > 1) return;
+  S.swan = Math.max(0, (S.swan ?? 6480) - dt);
+  drawSwan();
+  if (S.swan <= 0){ S.swan = 108*60; $('failfx').classList.add('on'); setTimeout(()=>$('failfx').classList.remove('on'), 2600); save(); }
+}
+function drawSwan(){
+  const s = Math.ceil(S.swan); $('swanClock').textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  $('swan').classList.toggle('warn', s <= 240);
+}
+$('swanIn').addEventListener('keydown', e=>{
+  if (e.key !== 'Enter') return;
+  const v = $('swanIn').value.replace(/[^0-9]+/g,' ').trim();
+  if (v === '4 8 15 16 23 42'){ S.swan = 108*60; drawSwan(); save(); $('swanIn').value=''; litNumbers(); toast('Код принят. Таймер сброшен на 108 минут.'); }
+  else { $('swanIn').value=''; toast('Неверный код.'); }
+});
+function litNumbers(){ const sp = $('numbers').children; [...sp].forEach((el,i)=>setTimeout(()=>{ el.classList.add('lit'); setTimeout(()=>el.classList.remove('lit'), 900); }, i*160)); }
+
+/* ================= controls ================= */
+function updPlayBtn(){ $('bPlay').textContent = P.playing ? '❚❚' : '▶'; }
+function begin(){
+  if (!started){ started = true; S.started = true; $('startOv').hidden = true; }
+}
+$('btnResume').onclick = ()=>{ begin(); startItem(idx, {resumeAt: S.pos > 3 ? rtStart(ITEMS[idx]) + S.pos : null, reload:true}); };
+$('btnRestart').onclick = ()=>{ S.pos = 0; begin(); startItem(0, {reload:true}); };
+$('bPlay').onclick = ()=>{ if (!started){ $('btnResume').click(); return; } P.playing ? pause() : play(); };
+$('bNext').onclick = ()=>{ begin(); next(); };
+$('bPrev').onclick = ()=>{ begin(); prev(); };
+$('bRestart').onclick = ()=>{ begin(); startItem(idx); };
+$('bBack').onclick = ()=>{ seekTo(Math.max(0, curT()-10)); };
+$('bFwd').onclick = ()=>{ seekTo(curT()+10); };
+$('bSyncHere').onclick = syncHere;
+$('bFull').onclick = toggleFull;
+$('segbar').onclick = e=>{ const it = ITEMS[idx]; const r = e.currentTarget.getBoundingClientRect(); const f = (e.clientX - r.left)/r.width; const a = rtStart(it), b = rtEnd(it); if (isFinite(b)) seekTo(a + f*(b-a)); };
+document.querySelectorAll('[data-off]').forEach(b=>b.onclick=()=>adjustOffset(+b.dataset.off));
+document.querySelectorAll('[data-goff]').forEach(b=>b.onclick=()=>{ const d=+b.dataset.goff; S.gOff = d===0 ? 0 : (S.gOff||0)+d; save(); renderOffset(); startItem(idx); });
+$('offReset').onclick = ()=>{ delete S.anchors[ITEMS[idx].v]; save(); renderOffset(); startItem(idx); };
+$('jumpGo').onclick = ()=>{ const n = parseInt($('jumpIn').value,10); if (n>=1 && n<=ITEMS.length){ begin(); startItem(n-1); } };
+$('resetAll').onclick = ()=>{ if ($('resetAll').dataset.c){ localStorage.removeItem('lostchrono.v2'); location.reload(); } else { $('resetAll').dataset.c='1'; $('resetAll').textContent='Точно? Нажмите ещё раз'; } };
+function toggleFull(){ const st = $('stage'); if (document.fullscreenElement) document.exitFullscreen(); else (st.requestFullscreen||st.webkitRequestFullscreen).call(st); }
+document.addEventListener('keydown', e=>{
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space'){ e.preventDefault(); $('bPlay').click(); }
+  else if (e.key === 'ArrowRight'){ $('bNext').click(); }
+  else if (e.key === 'ArrowLeft'){ $('bPrev').click(); }
+  else if (e.key === 'f' || e.key === 'а'){ toggleFull(); }
+  else if (e.key === 's' || e.key === 'ы'){ syncHere(); }
+});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on', x===b));
+  ['chars','chaps','set'].forEach(k=>$('pane-'+k).hidden = k !== b.dataset.tab);
+  if (b.dataset.tab === 'chaps'){ changedChap = null; renderChapters(); }
+});
+let toastT; function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), 4200); }
+
+/* ================= init ================= */
+buildRunbar();
+renderVlist();
+renderAll(false);
+initGhosts();
+drawSwan();
+if (S.started && (S.idx > 0 || S.pos > 5)){
+  const h = H[ITEMS[idx].h];
+  $('btnResume').textContent = `▶ Продолжить: ${h.label}`;
+  $('btnRestart').hidden = false;
+}
+</script>
+</body>
+</html>
